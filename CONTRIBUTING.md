@@ -412,12 +412,21 @@ Closes #123
 
 ### What Happens Next?
 
-1. **Automated Checks** - CI runs tests and linting
+1. **Automated Checks** - CI runs tests and linting for the contracts, backend, and frontend jobs
 2. **Code Review** - Maintainer reviews within 48-72 hours
 3. **Feedback** - Address any requested changes
 4. **Approval** - At least one maintainer must approve
 5. **Merge** - We merge your PR! 🎉
 6. **Points Added** - Issue points go to your Drips account
+
+### Required Status Checks
+
+The following GitHub Actions jobs must pass before a PR can be merged:
+- `Contracts`
+- `Backend`
+- `Frontend`
+
+These checks are defined in [.github/workflows/ci.yml](.github/workflows/ci.yml) and run automatically for pull requests opened, synchronized, or reopened.
 
 **Be patient and kind.** Reviews take time, and feedback makes your code better!
 
