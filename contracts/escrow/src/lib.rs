@@ -29,9 +29,9 @@ impl EscrowContract {
     /// full storage + persistence logic.
     pub fn create_payment(
         env: Env,
+        amount: i128,
         sender: Address,
         recipient: Address,
-        amount: i128,
     ) -> Result<u64, Error> {
         if amount <= 0 {
             return Err(Error::InvalidAmount);
@@ -73,7 +73,7 @@ mod test {
         let sender = Address::generate(&env);
         let recipient = Address::generate(&env);
 
-        let payment_id = client.create_payment(&sender, &recipient, &1000);
+        let payment_id = client.create_payment(&1000, &sender, &recipient);
         assert_eq!(payment_id, 0);
     }
 
@@ -87,7 +87,7 @@ mod test {
         let sender = Address::generate(&env);
         let recipient = Address::generate(&env);
 
-        let result = client.try_create_payment(&sender, &recipient, &-100);
+        let result = client.try_create_payment(&-100, &sender, &recipient);
         assert!(result.is_err());
     }
 }
