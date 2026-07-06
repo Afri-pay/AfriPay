@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to AfriPay! We're building the future of payments in Africa, and we'd love your help. Whether you're fixing a typo or building a major feature, every contribution matters.
 
-AfriPay is part of the **Stellar Wave Program on Drips Network** - you earn real rewards for your contributions. Let's build something amazing together! 🚀
+AfriPay is applying to the **Stellar Wave Program on Drips Network** - once accepted, you'll earn real rewards for your contributions. Let's build something amazing together! 🚀
 
 ---
 
@@ -133,7 +133,7 @@ Help us ship bug-free code:
 
 ## 🌊 Stellar Wave Rewards
 
-AfriPay participates in the Stellar Wave Program - **you earn rewards for merged contributions!**
+AfriPay is applying to the Stellar Wave Program - once accepted, **you'll earn rewards for merged contributions!**
 
 ### How It Works
 
