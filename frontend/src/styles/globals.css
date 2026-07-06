@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --afripay-primary: #0a5c4a;
+  --afripay-accent: #f2a900;
+}

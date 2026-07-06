@@ -3,3 +3,7 @@
 **/target
 Cargo.lock
 *.wasm
+
+# Node.js dependencies
+node_modules/
+**/node_modules/
