@@ -1,0 +1,10 @@
+{
+  "name": "AfriPay",
+  "short_name": "AfriPay",
+  "description": "Send money home instantly, across Africa.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a5c4a",
+  "icons": []
+}
