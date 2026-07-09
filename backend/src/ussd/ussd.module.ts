@@ -1,4 +1,7 @@
-import { Module } from "@nestjs/common";
+import { Module } from '@nestjs/common';
+import { UssdController } from './ussd.controller';
 
-@Module({})
+@Module({
+  controllers: [UssdController]
+})
 export class UssdModule {}
