@@ -2,7 +2,7 @@
 
 ## Executive summary
 
-This audit found a promising but early-stage AfriPay monorepo: a Next.js wallet-connect shell, a NestJS MoMo/rates/USSD backend, and four Soroban crates. This pass adds a tracked payment-intent API/UI, Horizon transaction construction, Freighter signing and Testnet submission, explicit escrow lifecycle methods, an asset-aware multisig execution path, MoMo idempotency protections, PostgreSQL-backed loading/persistence, scheduled reconciliation, API-key protection, and USSD session validation. Live Stellar deployment evidence remains blocked by missing CLI/deployer credentials.
+This audit found a promising but early-stage AfriPay monorepo: a Next.js wallet-connect shell, a NestJS MoMo/rates/USSD backend, and four Soroban crates. This pass adds a tracked payment-intent API/UI, Horizon transaction construction, Freighter signing and Testnet submission, explicit escrow lifecycle methods, an asset-aware multisig execution path, MoMo idempotency protections, PostgreSQL-backed loading/persistence, scheduled reconciliation, API-key protection, and USSD session validation. The four Soroban contracts are now deployed and queryable on Stellar Testnet; a Freighter-signed payment and live MoMo sandbox call remain outstanding.
 
 No contract IDs, transaction hashes, live demo links, contributor counts, stars, forks, or PR activity were fabricated.
 
@@ -69,12 +69,12 @@ Executed:
 | Validation | Status | Evidence |
 |---|---|---|
 | Soroban tests | PASS | 20 contract tests passed locally |
-| Payment Gateway Testnet deployment | BLOCKED | No Stellar CLI/deployer account available |
-| Escrow Testnet deployment | BLOCKED | No Stellar CLI/deployer account available |
-| Multisig Testnet deployment | BLOCKED | No Stellar CLI/deployer account available |
-| Savings Vault Testnet deployment | BLOCKED | No Stellar CLI/deployer account available |
-| Freighter-signed Testnet payment | BLOCKED | No funded Testnet wallet/Freighter session available |
-| PostgreSQL live persistence | BLOCKED | Docker daemon unavailable; no `DATABASE_URL` configured |
+| Payment Gateway Testnet deployment | PASS | `CB656MBZCHK5BMYUVNJQYAFIAWFNJZ2PASDYU7WCSVX34SUC6E5M3VCG`; [deployment tx](https://stellar.expert/explorer/testnet/tx/d2243dfb6359453990c3b8b87e72113a6cd4e89a04b5fa11b30703d6ac0b9304) |
+| Escrow Testnet deployment | PASS | `CCAL4FLLFKKCAT5NBFSDB7RH6GJYNBAPBJNIIJO5PZOEPHB23HXGCTCY`; [deployment tx](https://stellar.expert/explorer/testnet/tx/457b0db4ceb5738e728bfab49ee685be1adb78971c8b53989e9e222c7313477e) |
+| Multisig Testnet deployment | PASS | `CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67`; [deployment tx](https://stellar.expert/explorer/testnet/tx/9680343138462b2fa9f807b6405e5f20e799cb2cbb0f7be472deb0e6285866f9) |
+| Savings Vault Testnet deployment | PASS | `CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II`; [deployment tx](https://stellar.expert/explorer/testnet/tx/73b0e25704889f288edacfb62b549d1ad9c9072aed8fd3786c45f397b41415cf) |
+| Freighter-signed Testnet payment | BLOCKED | Funded deployer exists, but no browser Freighter approval/session was completed |
+| PostgreSQL live persistence | PASS | Docker PostgreSQL 16; migration, API write, direct query, backend restart, and reload verification passed |
 | MTN MoMo sandbox | BLOCKED | Official sandbox credentials unavailable |
 | Backend tests | PASS | 11 suites / 46 tests |
 | Frontend tests | PASS | 1 suite / 1 test |
@@ -99,7 +99,7 @@ Added `backend/migrations/001_payment_state.sql` as an explicit PostgreSQL schem
 
 ## Testnet evidence
 
-No contracts were deployed and no transactions were generated during this pass. The environment has no Stellar CLI, deployer secret/account, or funded Testnet account. Consequently there are no contract IDs or transaction hashes to report. WASM artifacts were produced and deployment instructions are in `docs/STELLAR_TESTNET_DEPLOYMENT.md`.
+The four contracts were deployed with Stellar CLI 28.0.0 from the official `stellar/stellar-cli` container using a dedicated Friendbot-funded Testnet deployer. Contract IDs, upload/deploy hashes, and explorer links are recorded in `docs/STELLAR_TESTNET_DEPLOYMENT.md`. No Freighter payment hash has been recorded yet.
 
 ## Security findings and fixes
 
@@ -111,7 +111,7 @@ No contracts were deployed and no transactions were generated during this pass. 
 
 ## External credential blockers
 
-Real MTN MoMo sandbox calls require provider credentials. Real Stellar Testnet evidence requires funded testnet accounts, deployed contract addresses, and a controlled signing flow. The Stellar CLI build was attempted under the repaired Visual Studio toolchain but stopped after an extended compile with no completed binary; no deployment was attempted or simulated. Freighter signing was implemented but not exercised against a funded wallet.
+Real MTN MoMo sandbox calls require provider credentials. Freighter evidence requires a browser session with the funded Testnet wallet and an explicit user approval. The CLI/deployer blocker is cleared; the remaining external blockers are Freighter interaction and official MoMo sandbox credentials.
 
 ## Items intentionally left for external contributors
 
@@ -120,6 +120,7 @@ The detailed backlog in `docs/GRANTFOX_CONTRIBUTOR_BACKLOG.md` covers Soroban se
 ## Final readiness checklist
 
 - [ ] End-to-end Stellar Testnet payment works
+- [x] All four Soroban contracts deployed and queried on Stellar Testnet
 - [x] Escrow create/fund/release/refund/expiry entry points implemented
 - [x] Multisig real asset movement entry point implemented
 - [x] PostgreSQL persistence and migrations are wired when `DATABASE_URL` is configured

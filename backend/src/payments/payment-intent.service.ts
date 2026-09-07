@@ -30,7 +30,7 @@ export interface PaymentLink {
 
 @Injectable()
 export class PaymentIntentService {
-  constructor(private readonly store = new PaymentIntentStore()) {}
+  constructor(private readonly store: PaymentIntentStore = new PaymentIntentStore()) {}
 
   create(input: Omit<PaymentIntent, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'transactionHash'>): PaymentIntent {
     const existing = this.store.findIntentByIdempotencyKey(input.idempotencyKey);
