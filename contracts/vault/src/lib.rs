@@ -134,7 +134,7 @@ mod test {
     fn test_deposit_and_withdraw() {
         let env = Env::default();
         env.mock_all_auths();
-        let contract_id = env.register_contract(None, VaultContract);
+        let contract_id = env.register(VaultContract, ());
         let client = VaultContractClient::new(&env, &contract_id);
         let user = Address::generate(&env);
 
@@ -151,7 +151,7 @@ mod test {
     fn test_yield_accrues_over_time() {
         let env = Env::default();
         env.mock_all_auths();
-        let contract_id = env.register_contract(None, VaultContract);
+        let contract_id = env.register(VaultContract, ());
         let client = VaultContractClient::new(&env, &contract_id);
         let user = Address::generate(&env);
 
@@ -173,7 +173,7 @@ mod test {
     fn test_withdraw_zero_balance_fails() {
         let env = Env::default();
         env.mock_all_auths();
-        let contract_id = env.register_contract(None, VaultContract);
+        let contract_id = env.register(VaultContract, ());
         let client = VaultContractClient::new(&env, &contract_id);
         let user = Address::generate(&env);
 
@@ -187,7 +187,7 @@ mod test {
     fn test_double_withdrawal_past_balance_fails() {
         let env = Env::default();
         env.mock_all_auths();
-        let contract_id = env.register_contract(None, VaultContract);
+        let contract_id = env.register(VaultContract, ());
         let client = VaultContractClient::new(&env, &contract_id);
         let user = Address::generate(&env);
 
@@ -204,7 +204,7 @@ mod test {
     fn test_invalid_amount_rejected() {
         let env = Env::default();
         env.mock_all_auths();
-        let contract_id = env.register_contract(None, VaultContract);
+        let contract_id = env.register(VaultContract, ());
         let client = VaultContractClient::new(&env, &contract_id);
         let user = Address::generate(&env);
 

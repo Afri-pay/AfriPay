@@ -1,4 +1,5 @@
-import { Module } from "@nestjs/common";
+import { Module } from '@nestjs/common';
+import { StellarService } from './stellar.service';
 
-@Module({})
+@Module({ providers: [StellarService], exports: [StellarService] })
 export class StellarModule {}

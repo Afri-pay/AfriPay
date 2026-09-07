@@ -1,7 +1,5 @@
 #![no_std]
-use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, Address, Env, Vec,
-};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, token, Address, Env, Vec};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -15,6 +13,7 @@ pub enum Error {
     AlreadyApproved = 6,
     AlreadyExecuted = 7,
     ThresholdNotMet = 8,
+    InvalidAmount = 9,
 }
 
 #[contracttype]
@@ -27,11 +26,22 @@ pub struct Proposal {
 }
 
 #[contracttype]
+#[derive(Clone)]
+pub struct TransferProposal {
+    pub asset: Address,
+    pub to: Address,
+    pub amount: i128,
+    pub approvals: Vec<Address>,
+    pub executed: bool,
+}
+
+#[contracttype]
 enum DataKey {
     Signers,
     Threshold,
     NextProposalId,
     Proposal(u64),
+    TransferProposal(u64),
 }
 
 #[contract]
@@ -49,8 +59,12 @@ impl MultisigContract {
         }
 
         env.storage().instance().set(&DataKey::Signers, &signers);
-        env.storage().instance().set(&DataKey::Threshold, &threshold);
-        env.storage().instance().set(&DataKey::NextProposalId, &0u64);
+        env.storage()
+            .instance()
+            .set(&DataKey::Threshold, &threshold);
+        env.storage()
+            .instance()
+            .set(&DataKey::NextProposalId, &0u64);
 
         Ok(())
     }
@@ -143,6 +157,97 @@ impl MultisigContract {
         Ok(())
     }
 
+    /// Creates a proposal that will transfer a Soroban token from this
+    /// multisig contract once the signer threshold is reached.
+    pub fn propose_asset_transfer(
+        env: Env,
+        proposer: Address,
+        asset: Address,
+        to: Address,
+        amount: i128,
+    ) -> Result<u64, Error> {
+        if amount <= 0 {
+            return Err(Error::InvalidAmount);
+        }
+        proposer.require_auth();
+        Self::require_signer(&env, &proposer)?;
+        let proposal_id: u64 = env
+            .storage()
+            .instance()
+            .get(&DataKey::NextProposalId)
+            .ok_or(Error::NotInitialized)?;
+        let mut approvals = Vec::new(&env);
+        approvals.push_back(proposer);
+        env.storage().persistent().set(
+            &DataKey::TransferProposal(proposal_id),
+            &TransferProposal {
+                asset,
+                to,
+                amount,
+                approvals,
+                executed: false,
+            },
+        );
+        env.storage()
+            .instance()
+            .set(&DataKey::NextProposalId, &(proposal_id + 1));
+        Ok(proposal_id)
+    }
+
+    pub fn approve_asset_transfer(
+        env: Env,
+        signer: Address,
+        proposal_id: u64,
+    ) -> Result<(), Error> {
+        signer.require_auth();
+        Self::require_signer(&env, &signer)?;
+        let mut proposal: TransferProposal = env
+            .storage()
+            .persistent()
+            .get(&DataKey::TransferProposal(proposal_id))
+            .ok_or(Error::ProposalNotFound)?;
+        if proposal.executed {
+            return Err(Error::AlreadyExecuted);
+        }
+        if proposal.approvals.contains(&signer) {
+            return Err(Error::AlreadyApproved);
+        }
+        proposal.approvals.push_back(signer);
+        env.storage()
+            .persistent()
+            .set(&DataKey::TransferProposal(proposal_id), &proposal);
+        Ok(())
+    }
+
+    pub fn execute_asset_transfer(env: Env, proposal_id: u64) -> Result<(), Error> {
+        let mut proposal: TransferProposal = env
+            .storage()
+            .persistent()
+            .get(&DataKey::TransferProposal(proposal_id))
+            .ok_or(Error::ProposalNotFound)?;
+        if proposal.executed {
+            return Err(Error::AlreadyExecuted);
+        }
+        let threshold: u32 = env
+            .storage()
+            .instance()
+            .get(&DataKey::Threshold)
+            .ok_or(Error::NotInitialized)?;
+        if proposal.approvals.len() < threshold {
+            return Err(Error::ThresholdNotMet);
+        }
+        token::Client::new(&env, &proposal.asset).transfer(
+            &env.current_contract_address(),
+            &proposal.to,
+            &proposal.amount,
+        );
+        proposal.executed = true;
+        env.storage()
+            .persistent()
+            .set(&DataKey::TransferProposal(proposal_id), &proposal);
+        Ok(())
+    }
+
     pub fn get_proposal(env: &Env, proposal_id: u64) -> Result<Proposal, Error> {
         env.storage()
             .persistent()
@@ -170,7 +275,7 @@ mod test {
     use soroban_sdk::testutils::Address as _;
 
     fn setup(env: &Env) -> (Address, Address, Address, Address) {
-        let contract_id = env.register_contract(None, MultisigContract);
+        let contract_id = env.register(MultisigContract, ());
         let signer_a = Address::generate(env);
         let signer_b = Address::generate(env);
         let signer_c = Address::generate(env);
