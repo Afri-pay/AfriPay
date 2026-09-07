@@ -212,23 +212,23 @@ yarn install
 # 1. Fork the repo on GitHub (click Fork button)
 
 # 2. Clone YOUR fork
-git clone https://github.com/YOUR_USERNAME/afripay-contracts.git
-cd afripay-contracts
+git clone https://github.com/YOUR_USERNAME/AfriPay.git
+cd AfriPay
 
 # 3. Add upstream remote
-git remote add upstream https://github.com/afripay/afripay-contracts.git
+git remote add upstream https://github.com/Afri-pay/AfriPay.git
 
 # 4. Verify remotes
 git remote -v
-# origin    https://github.com/YOUR_USERNAME/afripay-contracts.git (fetch)
-# upstream  https://github.com/afripay/afripay-contracts.git (fetch)
+# origin    https://github.com/YOUR_USERNAME/AfriPay.git (fetch)
+# upstream  https://github.com/Afri-pay/AfriPay.git (fetch)
 ```
 
 ### Set Up Environment
 
 ```bash
 # Copy example env file
-cp .env.example .env
+cp backend/.env.example backend/.env
 
 # Edit .env with your settings
 nano .env

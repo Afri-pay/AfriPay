@@ -1,387 +1,300 @@
 # AfriPay
 
+**Open-source Stellar payment infrastructure for African cross-border payments**, combining Soroban smart contracts with mobile-money, USSD, and traditional payment rails.
 
-**Send money home instantly. No more waiting days or losing money to fees.**
+AfriPay helps diaspora and local users move value quickly and transparently. The project is under active development and targets **Stellar Testnet** and **MTN MoMo sandbox** by default.
 
-AfriPay is a mobile-first payment platform that makes sending money across Africa as easy as sending a text. Powered by Stellar's lightning-fast blockchain, your family gets their money in seconds, not days—and you keep more of what you send.
-
-
----
-
-## Features
-
-- **Instant Transfers** - Money arrives in 3-5 seconds, not 3-5 days
-- **Ultra-Low Fees** - Pay less than 1% vs 8-10% with traditional services
-- **Mobile Money Integration** - Send directly to MTN, Airtel, M-Pesa wallets
-- **Multi-Currency Support** - NGN, KES, GHS, ZAR, USD, EUR and more
-- **USSD for Feature Phones** - No smartphone? No problem. Dial *123# to send
-- **Smart Exchange Rates** - Best rates from multiple providers
-- **Payment Links** - Share links for easy collection
-- **Bill Payments** - Pay utilities, airtime, subscriptions
-- **Savings Vaults** - Earn yield on your savings with DeFi
-- **No Bank Account Needed** - Just a phone number to get started
+Repository: https://github.com/Afri-pay/AfriPay
 
 ---
 
-## Why AfriPay?
+## What AfriPay Does
 
-We've all been there: sending money home means standing in line, paying outrageous fees, and waiting days for delivery. Your family needs that money now, not next week. AfriPay fixes this:
+AfriPay addresses slow, expensive remittance and P2P payment flows in Africa by:
 
-- **No more Western Union lines** - Send from your phone, anytime, anywhere
-- **Keep your money** - Save 90% on fees (send $100, they get $99, not $92)
-- **Real-time delivery** - Money arrives before you finish your coffee
-- **Reach everyone** - Works with smartphones AND feature phones
-- **Total transparency** - See exactly what you pay and what they receive
-- **Built for Africa** - By Africans, for Africans, solving African problems
+1. Recording payment intents and escrow logic on **Soroban** (Stellar smart contracts)
+2. Integrating **MTN Mobile Money** for collections and disbursements
+3. Offering a **USSD menu** for feature-phone access
+4. Providing a **Next.js frontend** with Freighter wallet connection
+5. Caching **exchange rates** for multi-currency display
 
----
-
-## Tech Stack
-
-**Frontend**: React, Next.js 14, TypeScript, TailwindCSS, PWA
-**Backend**: NestJS, TypeORM, PostgreSQL, Redis, Bull
-**Blockchain**: Stellar Network, Soroban Smart Contracts (Rust)
-**Mobile Money**: MTN MoMo API, Airtel Money API, M-Pesa API
-**USSD Gateway**: Africa's Talking, Flutterwave USSD
-**Wallet Integration**: Freighter, Lobstr, xBull
-**KYC/Compliance**: Smile Identity, Onfido
-**Exchange Rates**: Currency Layer, Open Exchange Rates
-**Real-time**: WebSockets, Server-Sent Events
-**Infrastructure**: Docker, GitHub Actions, Vercel, Railway
+The product vision is instant, low-cost transfers. The current codebase is an **MVP / testnet foundation** — see [Implemented Features](#implemented-features) for what actually works today.
 
 ---
 
-## Installation
+## Why Stellar? Why Soroban? Why Africa?
 
-### Prerequisites
+| Choice | Rationale |
+|--------|-----------|
+| **Stellar** | Fast finality (~3–5s), low fees, native multi-currency assets, strong presence in emerging markets |
+| **Soroban** | On-chain payment intents, escrow, multisig, and savings logic with deterministic execution |
+| **Africa** | Mobile-money-first economies, USSD access, high remittance demand, fragmented payment rails |
 
-- Node.js 18+ and npm/yarn
-- Rust 1.70+ and Cargo
-- PostgreSQL 14+
-- Redis (for job queues)
-- Stellar CLI (`stellar-cli`)
-- Docker (optional)
+**Intended users:** diaspora senders, local recipients on mobile money, developers integrating payment APIs, and OSS contributors building Stellar payment infrastructure.
 
-### Setup
+---
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/afripay-contracts.git
-cd afripay-contracts
+## Core Architecture
 
-# Install dependencies
-npm install
-
-# For smart contracts
-cargo build
-
-# Copy environment variables
-cp .env.example .env
-
-# Configure your .env file with:
-# - Database credentials
-# - Stellar network (testnet/mainnet)
-# - Mobile money API keys
-# - KYC provider credentials
-# - Exchange rate API keys
-
-# Run database migrations
-npm run migrate
-
-# Deploy contracts to testnet
-stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/escrow.wasm \
-  --source YOUR_SECRET_KEY \
-  --network testnet
-
-# Start development servers
-npm run dev
+```text
+Next.js Frontend (port 3000)
+       |
+       |  (API integration in progress)
+       v
+NestJS Backend (port 3001)
+       |
+       +---- Health / Rates API
+       |
+       +---- MTN MoMo (collection, disbursement, webhooks)
+       |
+       +---- USSD (Africa's Talking callback)
+       |
+       +---- Redis (exchange-rate cache, optional)
+       |
+       v
+Stellar Testnet / Soroban Contracts
+  - gateway (payment intents)
+  - escrow (P2P escrow)
+  - multisig (threshold approvals)
+  - vault (savings APY)
 ```
 
-Visit `http://localhost:3000` to start sending money!
+PostgreSQL, TypeORM, Bull, KYC, notifications, and payment-link modules are **declared or stubbed** but not fully wired into `AppModule` yet.
 
 ---
 
-## Quick Start
+## Implemented Features
 
-### Sending Money
+Verified in the current codebase:
 
-1. **Enter Amount** - How much you want to send
-2. **Choose Recipient** - Phone number or Stellar address
-3. **Select Method** - Mobile money, bank transfer, or crypto wallet
-4. **Review Details** - See fees and exchange rate upfront
-5. **Confirm & Send** - Approve with your wallet
-6. **Done!** - Recipient gets notified instantly
+| Feature | Location | Notes |
+|---------|----------|-------|
+| Soroban payment gateway | `contracts/gateway/` | Create intent, confirmer auth, confirm, rotate confirmer |
+| Soroban escrow (basic) | `contracts/escrow/` | Create payment with auth; release/refund pending |
+| Soroban multisig | `contracts/multisig/` | Propose, approve, execute (no token transfer yet) |
+| Soroban savings vault | `contracts/vault/` | Deposit, withdraw, fixed APY accrual |
+| MTN MoMo integration | `backend/src/momo/` | Collection, disbursement, status, webhooks (sandbox) |
+| USSD menu | `backend/src/ussd/` | Send money flow, balance/history/help (demo responses) |
+| Exchange-rate service | `backend/src/rates/` | Open Exchange Rates + Redis cache |
+| Freighter wallet connect | `frontend/src/` | Connect/disconnect public key in UI |
+| Health check | `backend/src/api/` | `GET /health` |
+| CI | `.github/workflows/ci.yml` | Contracts, backend, frontend jobs |
 
-### Receiving Money
+---
 
-1. Get notification via SMS or push
-2. Open the payment link
-3. Choose how to receive (mobile money, bank, wallet)
-4. Confirm your details
-5. Money arrives in seconds
+## In Progress
 
-### USSD (Feature Phones)
+| Feature | Status |
+|---------|--------|
+| Frontend send/receive flows | Wallet connect only; no payment UI yet |
+| Backend ↔ Soroban settlement | Stellar module stub; no Horizon/RPC calls in routes |
+| Escrow release/refund | Contract stores payments; release logic not implemented |
+| Multisig asset transfer | Execute marks done; no token movement |
+| MoMo persistence | In-memory store; lost on restart |
+| Database layer | TypeORM dependency present; not connected in app |
 
-```
-Dial: *123*AfriPay#
+---
 
-1. Send Money
-2. Check Balance
-3. Transaction History
-4. Help
+## Planned
 
-Enter recipient number: 0812345678
-Enter amount: 5000
-Confirm? 1=Yes, 2=No
-```
+- Payment links and reconciliation dashboard
+- KYC (Smile Identity / Onfido — module stub exists)
+- Notifications (SMS/push — module stub exists)
+- Airtel Money, M-Pesa integrations
+- Mainnet deployment path
+- API authentication and rate limiting
+- Durable PostgreSQL transaction storage
+
+---
+
+## Technology Stack
+
+| Layer | Technologies |
+|-------|--------------|
+| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, Jest |
+| Backend | NestJS 10, TypeScript, Jest, ioredis |
+| Contracts | Rust, Soroban SDK 21 |
+| Integrations | MTN MoMo API, Open Exchange Rates, Freighter |
+| CI | GitHub Actions (Rust + Node 20) |
 
 ---
 
 ## Project Structure
 
+```text
+AfriPay/
+├── contracts/           # Soroban smart contracts (Rust workspace)
+│   ├── gateway/         # Payment intent lifecycle
+│   ├── escrow/          # P2P escrow
+│   ├── multisig/        # Multi-signature approvals
+│   └── vault/           # Savings vault
+├── backend/             # NestJS API
+│   └── src/
+│       ├── api/         # Health
+│       ├── momo/        # MTN Mobile Money
+│       ├── ussd/        # USSD gateway
+│       └── rates/       # Exchange rates
+├── frontend/            # Next.js app
+│   └── src/
+│       ├── app/         # Pages
+│       ├── components/  # UI (WalletConnect)
+│       └── hooks/       # Freighter wallet hook
+├── docs/                # Additional documentation
+├── .github/workflows/   # CI
+├── CONTRIBUTING.md
+├── SECURITY.md
+└── CODE_OF_CONDUCT.md
 ```
-afripay/
-├── contracts/              # Soroban smart contracts (Rust)
-│   ├── escrow/            # P2P escrow contract
-│   ├── multisig/          # Multi-signature wallet
-│   ├── gateway/           # Payment gateway
-│   └── vault/             # Savings vault with yield
-├── backend/
-│   ├── src/
-│   │   ├── api/           # REST API routes
-│   │   ├── payments/      # Payment processing
-│   │   ├── stellar/       # Blockchain integration
-│   │   ├── momo/          # Mobile money services
-│   │   ├── ussd/          # USSD gateway
-│   │   ├── kyc/           # KYC/compliance
-│   │   ├── rates/         # Exchange rates
-│   │   ├── notifications/ # SMS, push, email
-│   │   └── webhooks/      # Provider webhooks
-│   └── migrations/        # Database migrations
-├── frontend/
-│   ├── src/
-│   │   ├── app/           # Next.js pages
-│   │   ├── components/    # React components
-│   │   │   ├── Send/      # Send money flow
-│   │   │   ├── Receive/   # Receive money flow
-│   │   │   ├── Wallet/    # Wallet management
-│   │   │   ├── History/   # Transaction history
-│   │   │   └── Settings/  # User settings
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── lib/           # Utilities
-│   │   └── styles/        # Global styles
-│   └── public/            # Static assets
-└── docs/                  # Documentation
+
+---
+
+## Local Development
+
+### Prerequisites
+
+- Node.js 20+
+- npm
+- Rust 1.70+ and Cargo (for contracts)
+- Redis (optional; rates service degrades gracefully without it)
+
+### Backend
+
+```bash
+cd backend
+npm ci
+cp .env.example .env
+# Edit .env with your sandbox credentials
+npm run dev
 ```
+
+Backend runs at `http://localhost:4000` (default; override with `PORT` in `.env`).
+
+### Frontend
+
+```bash
+cd frontend
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Frontend runs at `http://localhost:3000`.
+
+### Contracts
+
+```bash
+cd contracts
+cargo test
+cargo clippy --all-targets --all-features -- -D warnings
+```
+
+Requires a working Rust toolchain. CI runs these on Ubuntu.
+
+---
+
+## Environment Variables
+
+See:
+
+- [`backend/.env.example`](backend/.env.example) — MTN MoMo, Redis, Stellar, exchange rates
+- [`frontend/.env.example`](frontend/.env.example) — public API URL, network label
+
+Never commit real secrets.
+
+---
+
+## Testing
+
+Commands verified in this repository:
+
+```bash
+# Backend
+cd backend && npm test
+cd backend && npm run lint
+cd backend && npm run build
+
+# Frontend
+cd frontend && npm test
+cd frontend && npm run lint
+cd frontend && npm run build
+
+# Contracts (requires Rust)
+cd contracts && cargo test
+cd contracts && cargo clippy --all-targets --all-features -- -D warnings
+```
+
+CI runs backend lint + test, frontend lint + test, and contract test + clippy on every pull request.
+
+---
+
+## Stellar Network
+
+| Setting | Default |
+|---------|---------|
+| Network | **Stellar Testnet** |
+| Horizon | `https://horizon-testnet.stellar.org` |
+| Soroban RPC | `https://soroban-testnet.stellar.org` |
+
+Configure via `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, and `STELLAR_RPC_URL` in backend `.env`. Mainnet is not configured or tested in this repo.
+
+---
+
+## Payment Gateway Lifecycle
+
+On-chain payment intents (`contracts/gateway`):
+
+```text
+Created (Pending)
+  |
+  v
+Confirmed
+```
+
+Off-chain MTN MoMo transactions:
+
+```text
+PENDING
+  |
+  +---- FAILED
+  |
+  v
+SUCCESSFUL
+```
+
+Confirmation on-chain requires the authorized confirmer address. MoMo status is updated via API polling or webhook callback.
+
+---
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting, webhook verification, contract assumptions, and known limitations.
+
+**Important:** Backend API routes are not authenticated yet. Do not expose an unsecured deployment to the public internet.
+
+Report vulnerabilities to **security@afripay.io** — do not open public issues for security bugs.
 
 ---
 
 ## Contributing
 
-We welcome contributors! AfriPay is participating in the **Stellar Drips Wave Program** - earn rewards while building the future of African payments.
+We welcome contributions. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, workflow, and PR expectations.
 
-### Getting Started
-
-1. Read our [CONTRIBUTING.md](CONTRIBUTING.md) guide
-2. Browse [open issues](../../issues) tagged with `good first issue`
-3. Check out the [Code of Conduct](CODE_OF_CONDUCT.md)
-4. Join our [Discord community](https://discord.gg/wbTVX2dP9Y)
-
-### Drips Wave Rewards
-
-Earn points for contributions:
-- **Trivial** (100 pts) - Bug fixes, docs, UI tweaks
-- **Easy** (250 pts) - Components, tests, simple features
-- **Medium** (500 pts) - API endpoints, integrations
-- **Hard** (750 pts) - Complex features, security
-- **Epic** (1000 pts) - Full modules, major features
-
-Points convert to real rewards through Drips Network!
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/mobile-money-ghana`)
-3. Make your changes with clear commits
-4. Add tests and documentation
-5. Push to your fork
-6. Open a Pull Request
-
----
-
-## Roadmap
-
-### Phase 1: MVP (Current - Testnet)
-- [x] Basic P2P transfers (XLM, USDC)
-- [x] Web wallet interface
-- [x] Transaction history
-- [ ] OCR receipt scanning
-- [ ] Mobile money integration (Nigeria)
-- [ ] Basic KYC verification
-- [ ] Exchange rate API
-
-### Phase 2: Scale (Q2 2026)
-- [ ] USSD gateway for feature phones
-- [ ] Multi-country support (Kenya, Ghana, South Africa)
-- [ ] Bill payment integration
-- [ ] Savings vaults with yield
-- [ ] Native mobile apps (iOS, Android)
-- [ ] Agent network program
-
-### Phase 3: Ecosystem (Q3 2026)
-- [ ] Merchant payment SDK
-- [ ] Business bulk payments
-- [ ] API marketplace for developers
-- [ ] Loyalty and rewards program
-- [ ] Cross-border trade payments
-- [ ] Remittance corridors to 20+ countries
-
-### Phase 4: Scale & Impact (Q4 2026)
-- [ ] Decentralized identity system
-- [ ] Microfinance integration
-- [ ] Insurance products
-- [ ] Agricultural payments
-- [ ] Government disbursements
-- [ ] 1M+ active users across Africa
-
----
-
-## Use Cases
-
-- **Send Money Home** - Workers abroad supporting families
-- **Pay Suppliers** - Small businesses paying vendors
-- **Receive Payments** - Freelancers getting paid globally
-- **Split Bills** - Groups sharing costs
-- **Emergency Money** - Urgent transfers when needed
-- **Savings** - Earn yield in stable currencies
-- **Remittances** - Cross-border personal transfers
-- **Payroll** - Companies paying remote workers
-- **Marketplace Escrow** - Safe peer-to-peer transactions
-- **Donations** - NGOs and community fundraising
-
----
-
-## Security & Privacy
-
-- **Non-Custodial** - You control your keys, we never hold funds
-- **End-to-End Encryption** - Messages and data encrypted
-- **KYC Compliant** - Meet regulatory requirements
-- **Multi-Sig Protection** - Optional multi-signature for large amounts
-- **Transaction Monitoring** - Fraud detection and prevention
-- **Open Source** - Code is auditable by anyone
-- **Testnet First** - Practice safely before mainnet
-- **Bug Bounty Program** - Rewards for security researchers (coming soon)
-
-**Security Reporting**: security@afripay.io
-
----
-
-## Mobile App Features (PWA)
-
-- **Install on Home Screen** - Works like a native app
-- **Offline Mode** - View history and prepare transactions offline
-- **Push Notifications** - Real-time payment alerts
-- **Biometric Auth** - Face ID, Touch ID, fingerprint
-- **Low Data Usage** - Optimized for African mobile networks
-- **Works on 2G** - Designed for slow connections
-- **Camera Integration** - Scan QR codes for addresses
-- **Multi-Language** - English, Hausa, Yoruba, Swahili, Zulu, Amharic
-
----
-
-## Supported Currencies & Countries
-
-### Fiat Currencies
-**West Africa**: NGN (Nigeria), GHS (Ghana), XOF (Senegal, Côte d'Ivoire)
-**East Africa**: KES (Kenya), TZS (Tanzania), UGX (Uganda), ETB (Ethiopia)
-**Southern Africa**: ZAR (South Africa), BWP (Botswana), ZMW (Zambia)
-**North Africa**: EGP (Egypt), MAD (Morocco)
-**International**: USD, EUR, GBP
-
-### Crypto Assets
-- **XLM** - Stellar Lumens
-- **USDC** - USD Coin (stable)
-- **USDT** - Tether (stable)
-- **Custom Stellar Assets** - Community tokens
-
-### Mobile Money
-- MTN Mobile Money (17 countries)
-- Airtel Money (14 countries)
-- M-Pesa (Kenya, Tanzania)
-- Orange Money (francophone Africa)
-- Vodacom M-Pesa (South Africa)
-
----
-
-## Design Philosophy
-
-- **Mobile-First** - Designed for African smartphones
-- **Ultra-Fast** - Every action under 2 seconds
-- **Data-Light** - Minimal data usage for expensive networks
-- **Offline-Ready** - Core features work without internet
-- **Simple UI** - Your grandmother should understand it
-- **Local Languages** - Speak your language, not just English
-- **Trust Signals** - Clear fees, real-time updates, receipts
-
----
-
-## Compliance & Regulations
-
-AfriPay is designed to comply with:
-- **Nigeria**: CBN Guidelines, NDPR (Data Protection)
-- **Kenya**: CBK Regulations, Data Protection Act
-- **Ghana**: BoG E-Money Guidelines
-- **South Africa**: SARB, POPIA
-- **International**: AML/CFT Standards, FATF Guidelines
-
-We work with local regulators to ensure legal operation.
+Also see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE).
 
 ---
 
-## Acknowledgments
+## Contact
 
-- Built on [Stellar](https://stellar.org) blockchain
-- Supported by [Stellar Development Foundation](https://stellar.org/foundation)
-- Part of the [Drips Wave Program](https://www.drips.network/wave)
-- Mobile money powered by [Africa's Talking](https://africastalking.com)
-- KYC by [Smile Identity](https://smileidentity.com)
+- **GitHub Issues:** https://github.com/Afri-pay/AfriPay/issues
+- **Security:** security@afripay.io
+- **Discord:** https://discord.gg/wbTVX2dP9Y
 
 ---
 
-## Contact & Community
-
-- **Website**: [afripay.io](https://afripay.io) (coming soon)
-- **Twitter**: [@AfriPayHQ](https://twitter.com/AfriPayHQ)(coming soon)
-- **Discord**: [Join our community](https://discord.gg/wbTVX2dP9Y)
-- **Telegram**: [AfriPay Community](https://t.me/+VzINO9TdD8M2NjQ0)
-
-
----
-
-
-
----
-
-
----
-
-## Impact Metrics (Target)
-
-- **$100M+** sent across borders
-- **500K+** families supported
-- **$8M+** saved in fees vs traditional remittance
-- **30+** African countries served
-- **1M+** transactions processed
-
----
-
-**Built with ❤️ in Nigeria, for all of Africa**
-
-**Stop waiting. Stop overpaying. Send money home the African way.** 🌍✨
+*Built for Africa. Technically honest about what works today and what comes next.*

@@ -1,0 +1,49 @@
+name: Security issue
+description: Report a security vulnerability (prefer email for sensitive reports)
+title: "[Security]: "
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **For sensitive vulnerabilities, email security@afripay.io instead of using this template.**
+
+        Do not include exploit details that could harm users in a public issue.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: High-level description of the concern
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - Backend API
+        - Frontend
+        - Soroban contracts
+        - MTN MoMo / webhooks
+        - USSD
+        - Infrastructure / CI
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential impact
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: emailed
+    attributes:
+      label: Reporting
+      options:
+        - label: I have also emailed security@afripay.io for this issue
+          required: false
