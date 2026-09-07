@@ -1,4 +1,4 @@
-# AfriPay GrantFox Readiness Report
+# AfriPay Project Readiness Report
 
 ## Executive summary
 
@@ -22,7 +22,7 @@ No contract IDs, transaction hashes, live demo links, contributor counts, stars,
 - Completed a repository-wide structure and baseline audit.
 - Confirmed backend baseline, then expanded it to 11 suites and 46 tests passing.
 - Confirmed frontend baseline: 1 suite, 1 test passing.
-- Added `docs/GRANTFOX_CONTRIBUTOR_BACKLOG.md` with legitimate, scoped future work and acceptance criteria.
+- Added `docs/CONTRIBUTOR_BACKLOG.md` with legitimate, scoped future work and acceptance criteria.
 - Added this report with explicit limitations and evidence boundaries.
 - Added payment intents with idempotency-key deduplication and a frontend send/history surface.
 - Added escrow states and asset transfer entry points for fund, release, refund, and expiry-aware authorization.
@@ -83,8 +83,8 @@ Executed:
 
 ## Files created
 
-- `GRANTFOX_FINAL_READINESS_REPORT.md`
-- `docs/GRANTFOX_CONTRIBUTOR_BACKLOG.md`
+- `PROJECT_READINESS_REPORT.md`
+- `docs/CONTRIBUTOR_BACKLOG.md`
 - `backend/migrations/001_payment_state.sql`
 - `backend/src/payments/payment-intent.controller.ts`
 - `backend/src/payments/payment-intent.service.ts`
@@ -115,7 +115,7 @@ Real MTN MoMo sandbox calls require provider credentials. Freighter evidence req
 
 ## Items intentionally left for external contributors
 
-The detailed backlog in `docs/GRANTFOX_CONTRIBUTOR_BACKLOG.md` covers Soroban settlement verification, live PostgreSQL CI validation, MoMo-backed USSD, rate limiting, webhook replay claims, and contract invariant coverage. Completed escrow-release, basic persistence, and basic API-authentication drafts were removed from `.github/issues/`.
+The detailed backlog in `docs/CONTRIBUTOR_BACKLOG.md` covers Soroban settlement verification, live PostgreSQL CI validation, MoMo-backed USSD, rate limiting, webhook replay claims, and contract invariant coverage. Completed escrow-release, basic persistence, and basic API-authentication drafts were removed from `.github/issues/`.
 
 ## Final readiness checklist
 
