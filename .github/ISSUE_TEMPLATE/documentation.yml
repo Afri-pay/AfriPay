@@ -1,0 +1,28 @@
+name: Documentation
+description: Improve or fix documentation
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What documentation needs to change?
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: File(s) or section(s) affected
+      placeholder: README.md, SECURITY.md, contracts/gateway/README.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true

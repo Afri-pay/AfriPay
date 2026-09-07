@@ -1,0 +1,70 @@
+name: Bug report
+description: Report something that is broken
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve AfriPay. Please search existing issues first.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+      placeholder: Payment status stays PENDING after successful MoMo webhook
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce the issue?
+      placeholder: |
+        1. Start backend with sandbox credentials
+        2. POST /momo/collection/request-to-pay
+        3. Send webhook with status SUCCESSFUL
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Frontend
+        - Backend
+        - Soroban contracts
+        - MTN MoMo
+        - USSD
+        - CI / docs
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node/Rust versions, network (testnet/sandbox), etc.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Redact secrets before posting

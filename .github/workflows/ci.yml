@@ -40,6 +40,8 @@ jobs:
         run: npm run lint
       - name: Run tests
         run: npm test -- --runInBand
+      - name: Run build
+        run: npm run build
 
   frontend:
     name: Frontend
@@ -60,3 +62,5 @@ jobs:
         run: npm run lint
       - name: Run tests
         run: npm test -- --runInBand
+      - name: Run build
+        run: npm run build

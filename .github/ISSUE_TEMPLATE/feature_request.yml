@@ -1,0 +1,57 @@
+name: Feature request
+description: Suggest a new feature or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What needs to be built?
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+      description: Why does this matter for AfriPay users or contributors?
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Technical scope
+      description: Which files/modules are likely to change?
+      placeholder: backend/src/momo/, contracts/gateway/
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: Concrete implementation requirements
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Testable conditions for done
+    validations:
+      required: true
+
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty
+      options:
+        - Good first issue
+        - Intermediate
+        - Advanced
+        - Expert
+    validations:
+      required: true

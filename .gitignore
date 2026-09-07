@@ -11,5 +11,7 @@ Cargo.lock
 
 # Environment files
 **/.env
-**/.env.*
+**/.env.local
+**/.env.*.local
+!**/.env.example
 **/.DS_Store
