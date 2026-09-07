@@ -39,7 +39,7 @@ The product vision is instant, low-cost transfers. The current codebase is an **
 ```text
 Next.js Frontend (port 3000)
        |
-       |  (API integration in progress)
+       |  Payment intents, Freighter signing, receive links
        v
 NestJS Backend (port 3001)
        |
@@ -59,7 +59,7 @@ Stellar Testnet / Soroban Contracts
   - vault (savings APY)
 ```
 
-PostgreSQL, TypeORM, Bull, KYC, notifications, and payment-link modules are **declared or stubbed** but not fully wired into `AppModule` yet.
+PostgreSQL-backed MoMo persistence is enabled when `DATABASE_URL` is configured; the migration runs automatically unless `MOMO_AUTO_MIGRATE=false`. Stellar submission remains Testnet-only and requires a funded account plus Freighter approval.
 
 ---
 
@@ -86,12 +86,12 @@ Verified in the current codebase:
 
 | Feature | Status |
 |---------|--------|
-| Frontend send/receive flows | Wallet connect only; no payment UI yet |
-| Backend ↔ Soroban settlement | Stellar module stub; no Horizon/RPC calls in routes |
-| Escrow release/refund | Contract stores payments; release logic not implemented |
-| Multisig asset transfer | Execute marks done; no token movement |
-| MoMo persistence | In-memory store; lost on restart |
-| Database layer | TypeORM dependency present; not connected in app |
+| Frontend send/receive flows | Payment-intent and receive-link UI; live signing requires Testnet account |
+| Backend ↔ Stellar settlement | Horizon transaction construction and signed Testnet submission endpoints |
+| Escrow release/refund | Asset-backed lifecycle entry points implemented; deployment/e2e evidence pending |
+| Multisig asset transfer | Asset-aware threshold execution implemented; deployment/e2e evidence pending |
+| MoMo persistence | PostgreSQL-backed when `DATABASE_URL` is configured; memory fallback for local tests |
+| API security | API key guard enforced in production; local development may omit `API_KEY` |
 
 ---
 
