@@ -14,9 +14,7 @@
 //! Only the authorized backend signer configured via `init` may confirm
 //! a payment intent. Anyone else attempting to confirm is rejected.
 
-use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, Address, Env,
-};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env};
 
 /// Storage keys used by the contract.
 #[contracttype]
@@ -86,7 +84,9 @@ impl GatewayContract {
         if env.storage().instance().has(&DataKey::Confirmer) {
             return Err(GatewayError::AlreadyInitialized);
         }
-        env.storage().instance().set(&DataKey::Confirmer, &confirmer);
+        env.storage()
+            .instance()
+            .set(&DataKey::Confirmer, &confirmer);
         env.storage().instance().set(&DataKey::IntentCounter, &0u64);
         Ok(())
     }
@@ -109,7 +109,9 @@ impl GatewayContract {
             .get(&DataKey::Confirmer)
             .ok_or(GatewayError::NotInitialized)?;
         current.require_auth();
-        env.storage().instance().set(&DataKey::Confirmer, &new_confirmer);
+        env.storage()
+            .instance()
+            .set(&DataKey::Confirmer, &new_confirmer);
         Ok(())
     }
 
@@ -137,7 +139,9 @@ impl GatewayContract {
             .get(&DataKey::IntentCounter)
             .unwrap_or(0);
         let next_id = id + 1;
-        env.storage().instance().set(&DataKey::IntentCounter, &next_id);
+        env.storage()
+            .instance()
+            .set(&DataKey::IntentCounter, &next_id);
 
         let now = env.ledger().timestamp();
         let intent = PaymentIntent {
@@ -149,7 +153,9 @@ impl GatewayContract {
             created_at: now,
             confirmed_at: 0,
         };
-        env.storage().persistent().set(&DataKey::Intent(id), &intent);
+        env.storage()
+            .persistent()
+            .set(&DataKey::Intent(id), &intent);
 
         Ok(id)
     }
@@ -188,7 +194,9 @@ impl GatewayContract {
 
         intent.status = PaymentStatus::Confirmed;
         intent.confirmed_at = env.ledger().timestamp();
-        env.storage().persistent().set(&DataKey::Intent(intent_id), &intent);
+        env.storage()
+            .persistent()
+            .set(&DataKey::Intent(intent_id), &intent);
 
         Ok(())
     }
@@ -213,7 +221,7 @@ mod test {
     use soroban_sdk::Env;
 
     fn setup(env: &Env) -> (Address, GatewayContractClient<'_>) {
-        let contract_id = env.register_contract(None, GatewayContract);
+        let contract_id = env.register(GatewayContract, ());
         let client = GatewayContractClient::new(env, &contract_id);
         (contract_id, client)
     }

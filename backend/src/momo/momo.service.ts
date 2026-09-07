@@ -26,6 +26,10 @@ export class MomoService {
   // ---------------------------------------------------------------------
 
   async requestToPay(dto: RequestToPayDto): Promise<MomoTransactionRecord> {
+    const existing = this.store.findByExternalId(dto.externalId, 'COLLECTION');
+    if (existing) {
+      return existing;
+    }
     const referenceId = randomUUID();
     const config = getMomoConfig();
     const token = await this.auth.getToken('collection');
@@ -69,6 +73,10 @@ export class MomoService {
   // ---------------------------------------------------------------------
 
   async transfer(dto: TransferDto): Promise<MomoTransactionRecord> {
+    const existing = this.store.findByExternalId(dto.externalId, 'DISBURSEMENT');
+    if (existing) {
+      return existing;
+    }
     const referenceId = randomUUID();
     const config = getMomoConfig();
     const token = await this.auth.getToken('disbursement');
@@ -125,6 +133,19 @@ export class MomoService {
 
   getTransaction(referenceId: string): MomoTransactionRecord | undefined {
     return this.store.find(referenceId);
+  }
+
+  async reconcilePending(): Promise<MomoTransactionRecord[]> {
+    const pending = this.store.listPending();
+    const results: MomoTransactionRecord[] = [];
+    for (const record of pending) {
+      try {
+        results.push(await this.refreshStatus(record.type === 'COLLECTION' ? 'collection' : 'disbursement', record.referenceId));
+      } catch (error) {
+        this.logger.warn(`MoMo reconciliation failed for ${record.referenceId}: ${error}`);
+      }
+    }
+    return results;
   }
 
   // ---------------------------------------------------------------------
