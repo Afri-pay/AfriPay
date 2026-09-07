@@ -6,12 +6,15 @@ import {
   NotFoundException,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { ApiKeyGuard } from '../auth/api-key.guard';
 import { MomoService } from './momo.service';
 import { RequestToPayDto } from './dto/request-to-pay.dto';
 import { TransferDto } from './dto/transfer.dto';
 
 @Controller('momo')
+@UseGuards(ApiKeyGuard)
 export class MomoController {
   constructor(private readonly momoService: MomoService) {}
 
@@ -43,6 +46,11 @@ export class MomoController {
       throw new NotFoundException(`No disbursement found for reference ${referenceId}`);
     }
     return record;
+  }
+
+  @Post('reconcile')
+  async reconcile() {
+    return this.momoService.reconcilePending();
   }
 
   private validateRequestToPay(dto: RequestToPayDto): void {

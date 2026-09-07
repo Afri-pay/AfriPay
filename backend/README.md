@@ -34,6 +34,8 @@ protected with a shared secret appended as a `?token=` query parameter on the ca
 you register with MTN (`MTN_MOMO_WEBHOOK_TOKEN`). If unset, verification is skipped — only
 do this for local sandbox testing.
 
-Transactions are currently tracked in an in-memory store (`MomoTransactionStore`) keyed by
-the `X-Reference-Id` we generate, with a reverse lookup by `externalId` for webhook
-reconciliation. See required env vars in `.env.example` (prefixed `MTN_MOMO_`).
+Transactions use `MomoTransactionStore`, which loads and persists PostgreSQL state when
+`DATABASE_URL` is configured and falls back to memory for isolated tests. The
+`migrations/001_payment_state.sql` schema is applied automatically by default at startup.
+Records are keyed by the generated `X-Reference-Id`, with a reverse lookup by `externalId`
+for webhook reconciliation. See required env vars in `.env.example` (prefixed `MTN_MOMO_`).
