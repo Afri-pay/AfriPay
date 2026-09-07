@@ -238,9 +238,18 @@ CI runs backend lint + test, frontend lint + test, and contract test + clippy on
 
 Configure via `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, and `STELLAR_RPC_URL` in backend `.env`. Mainnet is not configured or tested in this repo.
 
-### Testnet evidence
+### Stellar Testnet deployment
 
-The contract build and local Soroban test suite are verified. Public Testnet contract IDs and a Freighter-signed payment hash are not published yet because no funded deployer or wallet was available during validation. See [the Testnet deployment runbook](docs/STELLAR_TESTNET_DEPLOYMENT.md) and [the readiness report](GRANTFOX_FINAL_READINESS_REPORT.md) for the evidence boundary.
+The following contracts are deployed and queryable on Stellar Testnet. These are development deployments, not production or mainnet contracts.
+
+| Component | Contract ID | Explorer |
+|---|---|---|
+| Payment Gateway | `CB656MBZCHK5BMYUVNJQYAFIAWFNJZ2PASDYU7WCSVX34SUC6E5M3VCG` | [View](https://stellar.expert/explorer/testnet/contract/CB656MBZCHK5BMYUVNJQYAFIAWFNJZ2PASDYU7WCSVX34SUC6E5M3VCG) |
+| Escrow | `CCAL4FLLFKKCAT5NBFSDB7RH6GJYNBAPBJNIIJO5PZOEPHB23HXGCTCY` | [View](https://stellar.expert/explorer/testnet/contract/CCAL4FLLFKKCAT5NBFSDB7RH6GJYNBAPBJNIIJO5PZOEPHB23HXGCTCY) |
+| Multisig | `CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67` | [View](https://stellar.expert/explorer/testnet/contract/CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67) |
+| Savings Vault | `CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II` | [View](https://stellar.expert/explorer/testnet/contract/CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II) |
+
+Deployment transactions and the remaining live-payment evidence are tracked in [the Testnet deployment runbook](docs/STELLAR_TESTNET_DEPLOYMENT.md) and [the readiness report](GRANTFOX_FINAL_READINESS_REPORT.md). A Freighter-signed payment has not yet been recorded.
 
 ---
 
