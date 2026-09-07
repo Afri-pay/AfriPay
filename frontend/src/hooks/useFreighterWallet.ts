@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import {
   isConnected,
   isAllowed,
@@ -15,31 +15,48 @@ export type WalletState = {
   error: string | null;
 };
 
-/**
- * Manages Freighter wallet connect/disconnect state for the frontend.
- * State lives only in React (no localStorage/sessionStorage), per project
- * constraints - the user reconnects each session.
- */
+const initialState: WalletState = {
+  isInstalled: false,
+  isChecking: true,
+  address: null,
+  error: null,
+};
+
+let walletState = initialState;
+const listeners = new Set<() => void>();
+let installationCheckStarted = false;
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot() {
+  return walletState;
+}
+
+function updateState(update: (current: WalletState) => WalletState) {
+  walletState = update(walletState);
+  listeners.forEach((listener) => listener());
+}
+
 export function useFreighterWallet() {
-  const [state, setState] = useState<WalletState>({
-    isInstalled: false,
-    isChecking: true,
-    address: null,
-    error: null,
-  });
+  const state = useSyncExternalStore(subscribe, getSnapshot, () => initialState);
 
   useEffect(() => {
+    if (installationCheckStarted) return;
+    installationCheckStarted = true;
     let cancelled = false;
 
     async function checkInstalled() {
       try {
         const connected = await isConnected();
         if (!cancelled) {
-          setState((s) => ({ ...s, isInstalled: connected, isChecking: false }));
+          updateState((s) => ({ ...s, isInstalled: connected, isChecking: false }));
         }
       } catch {
         if (!cancelled) {
-          setState((s) => ({ ...s, isInstalled: false, isChecking: false }));
+          updateState((s) => ({ ...s, isInstalled: false, isChecking: false }));
         }
       }
     }
@@ -51,7 +68,7 @@ export function useFreighterWallet() {
   }, []);
 
   const connect = useCallback(async () => {
-    setState((s) => ({ ...s, error: null }));
+    updateState((s) => ({ ...s, error: null }));
     try {
       const allowed = await isAllowed();
       if (!allowed) {
@@ -59,12 +76,12 @@ export function useFreighterWallet() {
       }
       const address = await getPublicKey();
       if (!address) {
-        setState((s) => ({ ...s, error: 'No address returned by Freighter' }));
+        updateState((s) => ({ ...s, error: 'No address returned by Freighter' }));
         return;
       }
-      setState((s) => ({ ...s, address }));
+      updateState((s) => ({ ...s, address }));
     } catch (err) {
-      setState((s) => ({
+      updateState((s) => ({
         ...s,
         error: err instanceof Error ? err.message : 'Failed to connect wallet',
       }));
@@ -73,7 +90,7 @@ export function useFreighterWallet() {
 
   const disconnect = useCallback(() => {
     // Freighter has no programmatic disconnect; we just clear local state.
-    setState((s) => ({ ...s, address: null, error: null }));
+    updateState((s) => ({ ...s, address: null, error: null }));
   }, []);
 
   return { ...state, connect, disconnect };
