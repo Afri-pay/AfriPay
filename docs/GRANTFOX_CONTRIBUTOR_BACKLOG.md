@@ -1,129 +1,111 @@
-# AfriPay Contributor Backlog
+# GrantFox Contributor Backlog
 
-This backlog describes legitimate engineering work discovered during the GrantFox readiness audit. It is a planning artifact only; none of these entries imply an existing GitHub issue, contributor, PR, or completed work.
+This backlog contains legitimate work remaining after the readiness implementation. It is a planning artifact, not evidence of published GitHub activity.
 
-## Implement a Stellar testnet payment settlement service
+## 1. Complete Soroban Gateway Settlement Verification
 
-**Problem/context:** The repository has wallet connection UI, but no backend payment-intent or Stellar submission path. A reviewer cannot complete a payment from the UI to a persisted testnet transaction.
+**Problem/context:** The backend currently builds and submits native XLM payments on Testnet, but the deployed payment-gateway contract invocation and confirmation path need a complete Soroban RPC integration.
 
-**Technical scope:** Add an idempotent payment-intent API, transaction persistence, Soroban transaction construction, Freighter signing handoff, Horizon/RPC submission, status polling, and explorer links. Keep private keys out of the backend.
+**Technical scope:** Add Testnet-only Soroban invocation helpers, transaction polling, terminal-state mapping, and mocked RPC tests. Preserve Freighter user signing and add a manual evidence runbook.
 
-**Out of scope:** Mainnet support, custodial wallets, seed phrases, or production payment-provider guarantees.
+**Out of scope:** Mainnet, custodial private keys, or fabricated deployment evidence.
 
-**Acceptance criteria:** A funded testnet account can create, sign, submit, and inspect one payment; duplicate idempotency keys return the original intent; rejected and failed transactions have terminal states; successful records contain a verified hash.
+**Acceptance criteria:** A payment intent produces a gateway invocation XDR, Freighter can sign it, the backend submits and polls it, and failures map to explicit states.
 
-**Tests:** Service unit tests with Stellar SDK mocks, idempotency tests, rejected-signature tests, RPC failure tests, and one opt-in testnet smoke test requiring explicit credentials.
+**Tests:** Mock success, rejection, timeout, malformed response, and polling cases; perform one real Testnet verification when credentials are available.
 
-**Security considerations:** Validate network and asset identifiers, never log signed envelopes or secrets, enforce recipient/amount bounds, and require an authenticated caller for server-side state changes.
-
-**Difficulty:** Expert.
-
-**Likely files/modules:** `backend/src/payments/`, `backend/src/stellar/`, `frontend/src/`, database migrations, CI, and README testnet evidence.
-
-## Complete escrow token movement and lifecycle tests
-
-**Problem/context:** The escrow crate currently creates records but does not fund, release, refund, expire, or move an asset.
-
-**Technical scope:** Define explicit states, token contract address, expiry semantics, authorized actors, and replay protection. Add Soroban token test fixtures and events.
-
-**Out of scope:** Arbitrary multi-asset exchange or dispute arbitration.
-
-**Acceptance criteria:** Fund, release, refund, expiry, unauthorized calls, invalid amounts, and every terminal-state replay are covered by contract tests; balances change exactly once.
-
-**Tests:** Soroban unit tests for all transitions and token balances, plus an optional CLI testnet invocation.
-
-**Security considerations:** Require authorization at the state-changing actor, reject zero/negative amounts, and avoid ambiguous expiry boundaries.
+**Security considerations:** Keep secrets out of logs, enforce Testnet, and never move user signing server-side.
 
 **Difficulty:** Advanced.
 
-**Likely files/modules:** `contracts/escrow/src/lib.rs`, contract snapshots, `contracts/README.md`.
+**Likely files/modules:** `backend/src/stellar/`, `backend/src/payments/`, `frontend/src/components/Payments/`.
 
-## Make multisig execute token transfers
+## 2. Validate Live PostgreSQL Persistence in CI
 
-**Problem/context:** Multisig approval currently marks a proposal executed but does not move an asset.
+**Problem/context:** PostgreSQL repositories and migrations are implemented, but CI does not yet run a real database and restart-survival test.
 
-**Technical scope:** Add an asset-aware proposal path, signer authorization, threshold checks, duplicate approval protection, one-time execution, and execution events.
+**Technical scope:** Add a PostgreSQL service, migration smoke test, persisted payment-intent/history test, and restart/reload verification.
 
-**Out of scope:** DAO governance, arbitrary contract call encoding, or mainnet deployment.
+**Out of scope:** Committing credentials, replacing the repository with an ORM without need, or silently falling back when configured.
 
-**Acceptance criteria:** Reaching threshold transfers the requested amount to the recipient exactly once; non-signers cannot approve; duplicate approvals and repeated execution fail.
+**Acceptance criteria:** CI starts PostgreSQL, applies migrations, writes an intent, reloads it after repository restart, and fails clearly on connection/schema errors.
 
-**Tests:** Threshold 1/N, outsider, duplicate signer, insufficient balance, and repeated execution tests with a Soroban token fixture.
+**Tests:** Migration idempotency, unique idempotency key, state update, link persistence, and restart reload.
 
-**Security considerations:** Validate positive amounts and signer set uniqueness; protect initialization and ensure the contract is the transfer authority.
-
-**Difficulty:** Advanced.
-
-**Likely files/modules:** `contracts/multisig/src/lib.rs`, contract snapshots, deployment docs.
-
-## Replace MoMo in-memory state with PostgreSQL
-
-**Problem/context:** MoMo records disappear on restart and duplicate callbacks are not backed by a durable uniqueness constraint.
-
-**Technical scope:** Add a TypeORM/SQL schema for transactions and webhook events, unique external/reference identifiers, legal status transitions, transaction boundaries, and a reconciliation query/service.
-
-**Out of scope:** Live provider credentials or pretending sandbox calls succeeded.
-
-**Acceptance criteria:** Restart preserves records; duplicate callbacks are no-ops; invalid backward transitions are rejected; pending records can be reconciled through provider polling.
-
-**Tests:** Repository integration tests against PostgreSQL, duplicate webhook tests, transition matrix tests, and provider mocks.
-
-**Security considerations:** Store no MoMo secrets in rows or logs, verify callbacks, and redact provider payloads.
+**Security considerations:** Use ephemeral CI credentials and redact connection strings.
 
 **Difficulty:** Advanced.
 
-**Likely files/modules:** `backend/src/momo/`, `backend/src/database/`, migrations, `.env.example`, CI services.
+**Likely files/modules:** `backend/migrations/`, `backend/src/payments/payment-intent.store.ts`, `.github/workflows/ci.yml`.
 
-## Build a persistent USSD session engine
+## 3. Complete MoMo-Backed USSD Send Money
 
-**Problem/context:** The current controller parses text but does not persist session state or initiate a real payment.
+**Problem/context:** USSD session validation and persistence exist, but a completed session does not yet call a real MoMo collection adapter.
 
-**Technical scope:** Model session ID, phone identifier, current step, validated inputs, expiry, safe restart, and a provider adapter for MoMo.
+**Technical scope:** Add an explicit adapter, traceable idempotent external ID, provider-state mapping, and safe `CON`/`END` responses.
 
-**Out of scope:** Storing or authenticating a PIN as a payment credential.
+**Out of scope:** PIN authentication, new providers, or claiming sandbox success without credentials.
 
-**Acceptance criteria:** Repeated callbacks resume the correct session; malformed input and expired sessions terminate safely; successful input creates a traceable pending payment.
+**Acceptance criteria:** Valid sessions create one request; retries and callbacks are idempotent; pending, failure, timeout, and success responses are documented.
 
-**Tests:** State-machine transition tests, expiry tests, replay tests, and mocked MoMo success/failure tests.
+**Tests:** Mock provider success, failure, timeout, duplicate request, duplicate callback, and expiry.
 
-**Security considerations:** Never log PIN input, validate MSISDN and amounts, verify provider callback signatures, and rate-limit the public endpoint.
+**Security considerations:** Validate MSISDN, verify callbacks, rate-limit the endpoint, and never log PIN input.
 
 **Difficulty:** Advanced.
 
-**Likely files/modules:** `backend/src/ussd/`, `backend/src/momo/`, session migration, simulator UI.
+**Likely files/modules:** `backend/src/ussd/`, `backend/src/momo/`, `backend/migrations/001_payment_state.sql`.
 
-## Add API authentication and abuse controls
+## 4. Add API Rate Limiting and Route Policy Tests
 
-**Problem/context:** Most backend routes are currently unauthenticated, which is unsafe for a public deployment.
+**Problem/context:** API-key authentication protects application routes, but rate limiting and a complete route policy matrix are still needed before public exposure.
 
-**Technical scope:** Add API-key or JWT guards, route-level policy, webhook exceptions, request validation, and rate limits.
+**Technical scope:** Add rate limiting, document public/provider routes, preserve webhook guards, and add unauthorized/authorized/throttled tests.
 
-**Out of scope:** Full user identity/KYC product design.
+**Out of scope:** Full user identity or KYC design.
 
-**Acceptance criteria:** Protected routes reject missing/invalid credentials; public health and documented provider callbacks remain usable; errors do not leak secrets.
+**Acceptance criteria:** Protected routes reject missing/invalid keys, documented public routes remain usable, and repeated abuse receives a bounded response.
 
-**Tests:** Guard unit tests, authorized/unauthorized controller tests, and rate-limit tests.
+**Tests:** Guard matrix, rate-limit tests with a fake clock, webhook compatibility, and error-redaction tests.
 
-**Security considerations:** Environment-only secrets, rotation guidance, constant-time comparisons where applicable, and safe auth-failure logs.
-
-**Difficulty:** Medium/Hard.
-
-**Likely files/modules:** `backend/src/auth/`, `backend/src/main.ts`, controllers, `SECURITY.md`.
-
-## Publish OpenAPI and verified testnet evidence
-
-**Problem/context:** The project needs developer-readable API contracts and reproducible evidence without inventing deployment data.
-
-**Technical scope:** Add Swagger/OpenAPI schemas, error examples, local setup, deployment commands, and a clearly marked testnet evidence section populated only after actual execution.
-
-**Out of scope:** Publishing secrets or unverified hashes.
-
-**Acceptance criteria:** A clean clone can start the documented services; API docs match routes; every contract ID/hash links to a real explorer record or is explicitly marked unavailable.
-
-**Tests:** Documentation smoke check and clean-clone CI job.
-
-**Security considerations:** Redact credentials and identify all testnet-only assumptions.
+**Security considerations:** Environment-only secrets, constant-time comparisons, rotation guidance, and no credential logging.
 
 **Difficulty:** Intermediate.
 
-**Likely files/modules:** `backend/src/`, `README.md`, `docs/`, CI.
+**Likely files/modules:** `backend/src/auth/`, `backend/src/main.ts`, controllers, `SECURITY.md`.
+
+## 5. Centralize Webhook Routing and Replay Claims
+
+**Problem/context:** MoMo webhook endpoints work, but provider routing and durable event claiming are not centralized.
+
+**Technical scope:** Add a typed provider router, unique webhook event claim before dispatch, compatibility routes, and structured correlation logs.
+
+**Out of scope:** Replacing the MoMo client or weakening token verification.
+
+**Acceptance criteria:** Valid callbacks route once, replayed event IDs are no-ops, invalid providers/tokens are rejected, and reconciliation shares legal transitions.
+
+**Tests:** Valid, invalid, unknown-provider, duplicate-event, handler-failure, and race cases.
+
+**Security considerations:** Parameterized queries, payload redaction, provider verification matrix, and documented replay assumptions.
+
+**Difficulty:** Intermediate to advanced.
+
+**Likely files/modules:** `backend/src/webhooks/`, `backend/src/momo/`, `backend/migrations/001_payment_state.sql`.
+
+## 6. Add Contract Invariant and Event Coverage
+
+**Problem/context:** Escrow and multisig behavior now has lifecycle and transfer entry points, but broader invariant and event coverage is still valuable before deployment.
+
+**Technical scope:** Add authorization/state-transition matrices, event assertions, insufficient-balance cases, and property-based or generated scenario tests where practical.
+
+**Out of scope:** New DeFi products, governance, or mainnet deployment.
+
+**Acceptance criteria:** Invalid transitions, duplicate execution, expiry boundaries, signer uniqueness, and balance limits are covered with readable failures.
+
+**Tests:** Soroban unit tests plus generated multi-step scenarios where supported by the SDK.
+
+**Security considerations:** Validate all amounts and authorities; do not claim an audit from tests alone.
+
+**Difficulty:** Advanced.
+
+**Likely files/modules:** `contracts/escrow/`, `contracts/multisig/`, `contracts/gateway/`, contract snapshots.

@@ -64,6 +64,23 @@ Executed:
 
 `npm audit fix --package-lock-only` applied nonbreaking lockfile remediation. `npm audit --audit-level=high` now reports 24 backend findings and 8 frontend findings. Remaining fixes require coordinated Nest 12/Next 14.2.35 or newer migration work, so automatic force-fixes were not applied.
 
+## Final evidence table
+
+| Validation | Status | Evidence |
+|---|---|---|
+| Soroban tests | PASS | 20 contract tests passed locally |
+| Payment Gateway Testnet deployment | BLOCKED | No Stellar CLI/deployer account available |
+| Escrow Testnet deployment | BLOCKED | No Stellar CLI/deployer account available |
+| Multisig Testnet deployment | BLOCKED | No Stellar CLI/deployer account available |
+| Savings Vault Testnet deployment | BLOCKED | No Stellar CLI/deployer account available |
+| Freighter-signed Testnet payment | BLOCKED | No funded Testnet wallet/Freighter session available |
+| PostgreSQL live persistence | BLOCKED | Docker daemon unavailable; no `DATABASE_URL` configured |
+| MTN MoMo sandbox | BLOCKED | Official sandbox credentials unavailable |
+| Backend tests | PASS | 11 suites / 46 tests |
+| Frontend tests | PASS | 1 suite / 1 test |
+| Production builds | PASS | Backend and frontend builds passed; release WASM built |
+| Contributor backlog cleanup | PASS | Completed drafts removed and remaining drafts rewritten |
+
 ## Files created
 
 - `GRANTFOX_FINAL_READINESS_REPORT.md`
@@ -87,7 +104,7 @@ No contracts were deployed and no transactions were generated during this pass. 
 ## Security findings and fixes
 
 - Positive: no private keys, seed phrases, provider credentials, or production secrets were added.
-- Positive: the existing documentation warns that backend routes are not yet authenticated and MoMo webhooks use a shared-token guard.
+- Positive: application routes use the API-key guard in production and MoMo webhooks use a dedicated shared-token guard.
 - Open: rate limiting and database-backed auditability still need implementation; API-key authentication is now applied to the protected application routes.
 - Open: provider credentials and callback verification must be exercised with real sandbox configuration before claiming production-like reliability.
 - Open: `npm audit` reports unresolved transitive vulnerabilities; upgrading Nest/Next/tooling should be handled as a dedicated compatibility change.
@@ -98,7 +115,7 @@ Real MTN MoMo sandbox calls require provider credentials. Real Stellar Testnet e
 
 ## Items intentionally left for external contributors
 
-The detailed backlog in `docs/GRANTFOX_CONTRIBUTOR_BACKLOG.md` covers payment settlement, escrow tests, multisig transfers, PostgreSQL persistence, USSD sessions, API security, and OpenAPI/testnet evidence. These are substantive tasks, not artificial activity targets.
+The detailed backlog in `docs/GRANTFOX_CONTRIBUTOR_BACKLOG.md` covers Soroban settlement verification, live PostgreSQL CI validation, MoMo-backed USSD, rate limiting, webhook replay claims, and contract invariant coverage. Completed escrow-release, basic persistence, and basic API-authentication drafts were removed from `.github/issues/`.
 
 ## Final readiness checklist
 
