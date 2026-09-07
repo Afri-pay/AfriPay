@@ -1,65 +1,41 @@
 ## Summary
 
-Wire the **USSD Send Money flow** end-to-end: Africa's Talking callback → AfriPay backend → MTN MoMo sandbox collection → status/webhook → user confirmation via USSD `END` response.
+Connect the persisted USSD send-money state machine to a real MoMo collection adapter.
 
-## Background
+## Current behavior
 
-USSD is AfriPay's feature-phone access path. A menu scaffold exists in `backend/src/ussd/`, but Send Money stops at demo messages. Connecting USSD to MoMo demonstrates real African payment rail integration.
-
-## Current state
-
-- [x] `POST /ussd` with URL-encoded body parsing
-- [x] Menu: Send Money, Balance, History, Help
-- [x] Multi-step Send Money prompts (recipient → amount → PIN)
-- [x] Unit tests in `ussd.controller.spec.ts`
-- [ ] Session persistence via `sessionId`
-- [ ] MoMo `requestToPay` on flow completion
-- [ ] Status polling or webhook-driven USSD follow-up (document MVP choice)
+USSD sessions validate menu input, recipient, amount, expiry, and replay behavior. The flow does not yet initiate a real MoMo request-to-pay operation or expose a provider-backed pending/success/failure response.
 
 ## Technical scope
 
-- `backend/src/ussd/` — session store, inject `MomoService`
-- `backend/src/momo/` — reuse collection API (depends on [#32](https://github.com/Afri-pay/AfriPay/issues/32) persistence recommended)
-- `backend/.env.example` — Africa's Talking vars
-- Integration tests mocking MoMo API
+- Inject the existing `MomoService` through an explicit USSD payment adapter.
+- Persist a traceable payment reference for completed sessions.
+- Map pending, successful, failed, and provider-timeout states to safe `CON`/`END` responses.
+- Add sandbox-mock integration tests.
 
-## Requirements
+## Out of scope
 
-1. Parse `sessionId`, `phoneNumber`, `text` from Africa's Talking payload
-2. Persist multi-step session state between USSD requests
-3. On Send Money completion, call MoMo collection with sanitized MSISDN and amount
-4. Return user-friendly `CON`/`END` messages for pending, success, and failure
-5. Never log PIN values
+PIN-based authentication, storing PINs, new mobile-money providers, or claiming a live sandbox flow without credentials.
 
 ## Acceptance criteria
 
-- [ ] Complete Send Money flow initiates a MoMo sandbox collection
-- [ ] Transaction `referenceId`/`externalId` traceable in backend store
-- [ ] Invalid input and unknown menu options handled gracefully
-- [ ] Tests cover happy path + MoMo failure + invalid input
-- [ ] `cd backend && npm test` pass
+- A valid completed session creates exactly one MoMo request with an idempotent external ID.
+- Duplicate callbacks and retries do not double-credit or create a second request.
+- Invalid input, provider rejection, timeout, and pending states return documented responses.
+- No PIN or provider secret is logged.
 
 ## Tests
 
-- Extend `ussd.controller.spec.ts`
-- Mock `MomoService.requestToPay` success and failure
-- Optional: sandbox manual test steps in PR description
+Mock MoMo success, failure, timeout, duplicate request, duplicate callback, and expired-session cases.
 
 ## Security considerations
 
-- Validate MSISDN format before MoMo call
-- Rate-limit `/ussd` when publicly exposed
-- PIN collected for UX only until real auth exists — document limitation
-
-## Definition of done
-
-- PR merged; demo steps in PR or docs for Africa's Talking sandbox callback URL
+Verify provider callbacks, rate-limit the public endpoint, validate MSISDN format, and never treat a USSD PIN as a payment credential.
 
 ## Difficulty
 
-**Advanced / Epic** — 750–1000 points
+Advanced.
 
-## Related
+## Likely files/modules
 
-- Builds on MoMo persistence ([#32](https://github.com/Afri-pay/AfriPay/issues/32)) for durable transaction tracking
-- Complements Stellar settlement for full on-chain/off-chain bridge
+`backend/src/ussd/`, `backend/src/momo/`, `backend/migrations/001_payment_state.sql`.

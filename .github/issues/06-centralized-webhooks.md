@@ -1,57 +1,41 @@
 ## Summary
 
-Implement a **centralized webhook and reconciliation service** that validates provider callbacks and routes them to domain handlers (MoMo, future KYC, etc.).
+Centralize provider webhook routing and strengthen replay protection around the existing MoMo handlers.
 
-## Background
+## Current behavior
 
-MTN MoMo webhooks live under `backend/src/momo/` with token verification. As AfriPay adds providers, duplicating auth and routing logic does not scale. A single entry point improves security review and contributor clarity.
-
-## Current state
-
-- [x] `MomoWebhookGuard` + collection/disbursement callback handlers
-- [x] In-memory status upsert on webhook delivery
-- [ ] `backend/src/webhooks/` module (stub only)
-- [ ] Provider router with typed dispatch
-- [ ] Reconciliation job/pattern for missed webhooks
+MoMo webhook controllers and token validation work independently, and scheduled reconciliation polls pending records. There is no provider-neutral router or durable webhook event claim/check before dispatch.
 
 ## Technical scope
 
-- `backend/src/webhooks/webhooks.module.ts` — controller + router service
-- Refactor MoMo webhooks to delegate through router (keep backward-compatible paths or redirect)
-- Reconciliation: poll pending transactions older than N minutes (optional follow-up in same or second PR)
-- `SECURITY.md` — per-provider verification matrix
+- Add a provider router with typed event contracts.
+- Record and uniquely claim webhook event IDs before dispatch.
+- Preserve existing collection and disbursement endpoints for compatibility.
+- Add structured correlation logging and a provider verification matrix.
 
-## Requirements
+## Out of scope
 
-1. Route `/webhooks/momo/collection` and `/webhooks/momo/disbursement` (or equivalent) through centralized module
-2. Reject unknown providers and invalid auth
-3. Preserve existing MoMo webhook behavior (all current tests pass)
-4. Structured logging with `referenceId` / `externalId` correlation
-5. Document extension point for future providers
+Replacing the existing MoMo API client, adding unrelated providers, or weakening the current webhook token guard.
 
 ## Acceptance criteria
 
-- [ ] Valid MoMo webhook updates transaction status (existing specs green)
-- [ ] Missing/invalid token → 401
-- [ ] Unknown provider path → 404 or 400
-- [ ] New unit tests for router
-- [ ] Optional: reconciliation script or cron hook documented
+- Valid MoMo callbacks route to the existing handlers and remain idempotent.
+- Invalid tokens and unknown providers are rejected.
+- Replayed event IDs do not run domain updates twice.
+- Reconciliation and webhook paths share the same legal state-transition rules.
 
 ## Tests
 
-- Keep `momo-webhook.controller.spec.ts` passing
-- Add `webhooks/*.spec.ts` for routing and auth failures
+Add router tests for valid, invalid, unknown-provider, duplicate-event, and handler-failure cases.
 
 ## Security considerations
 
-- Never log webhook secrets
-- Document replay-protection gap if not implemented in v1
-- Idempotent handler dispatch (safe under duplicate delivery)
-
-## Definition of done
-
-- PR merged; SECURITY.md webhook section updated
+Use parameterized persistence, verify provider signatures/tokens, redact payloads, and document replay assumptions.
 
 ## Difficulty
 
-**Medium** — 500 points
+Intermediate to advanced.
+
+## Likely files/modules
+
+`backend/src/webhooks/`, `backend/src/momo/`, `backend/migrations/001_payment_state.sql`, `SECURITY.md`.
