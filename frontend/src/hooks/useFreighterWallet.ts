@@ -24,7 +24,6 @@ const initialState: WalletState = {
 
 let walletState = initialState;
 const listeners = new Set<() => void>();
-let installationCheckStarted = false;
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
@@ -44,8 +43,6 @@ export function useFreighterWallet() {
   const state = useSyncExternalStore(subscribe, getSnapshot, () => initialState);
 
   useEffect(() => {
-    if (installationCheckStarted) return;
-    installationCheckStarted = true;
     let cancelled = false;
 
     async function checkInstalled() {

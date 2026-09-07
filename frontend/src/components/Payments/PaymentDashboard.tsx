@@ -14,7 +14,7 @@ type Intent = {
   transactionHash?: string;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3101';
 const apiHeaders = (): Record<string, string> => process.env.NEXT_PUBLIC_API_KEY ? { 'x-api-key': process.env.NEXT_PUBLIC_API_KEY } : {};
 const TESTNET_PASSPHRASE = 'Test SDF Network ; September 2015';
 
