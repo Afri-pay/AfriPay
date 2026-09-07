@@ -1,62 +1,41 @@
 ## Summary
 
-Implement a **Stellar settlement service** in the backend that submits and verifies Soroban transactions against Stellar Testnet (Horizon + Soroban RPC).
+Add Soroban contract invocation and transaction verification to the existing Testnet payment path.
 
-## Background
+## Current behavior
 
-AfriPay's on-chain payment gateway and escrow contracts exist, but the backend `stellar/` module is a stub. Connecting the NestJS backend to Soroban enables end-to-end flows: payment intent creation → off-chain MoMo collection → on-chain confirmation via the gateway confirmer.
-
-## Current state
-
-- [x] Soroban `gateway` contract: create intent, confirm intent, confirmer rotation
-- [x] `backend/src/stellar/stellar.module.ts` — empty stub
-- [ ] Horizon/RPC client configuration
-- [ ] Transaction build, sign (server-side confirmer key), submit
-- [ ] Transaction status polling / verification
-- [ ] Integration with payment/MoMo lifecycle
+AfriPay builds native XLM payment transactions through Horizon, supports Freighter signing, and submits signed XDR on Testnet. The backend does not yet invoke the deployed payment-gateway contract or verify a confirmed Soroban result end to end.
 
 ## Technical scope
 
-- `backend/src/stellar/` — `StellarService`, config, types
-- `backend/.env.example` — `STELLAR_NETWORK`, `STELLAR_RPC_URL`, `STELLAR_HORIZON_URL`, confirmer secret (document as env-only, never committed)
-- Wire into `AppModule` and a controller or internal service API
-- Tests with mocked Horizon/RPC responses
+- Add Testnet-only Soroban RPC configuration and typed invocation helpers.
+- Add transaction polling and confirmation/error normalization.
+- Connect payment-intent settlement to the deployed gateway contract without introducing server-side user-key custody.
+- Add mocked RPC tests and a documented manual Testnet runbook.
 
-## Requirements
+## Out of scope
 
-1. Read network config from environment (default: **testnet**)
-2. Provide methods to:
-   - Verify a transaction hash succeeded on network
-   - Submit a Soroban contract invocation (e.g. `confirm_payment_intent`) using confirmer credentials
-3. Typed errors for network failures, submission failures, and verification mismatches
-4. Structured logging without leaking secrets
-5. Unit tests with mocked fetch/RPC; no mainnet calls in CI
+Mainnet deployment, custodial private keys, unrelated contract features, or fabricated Testnet evidence.
 
 ## Acceptance criteria
 
-- [ ] Service connects to Stellar Testnet RPC and Horizon using env config
-- [ ] Can verify a known testnet transaction hash (mocked in unit tests; manual testnet optional in PR description)
-- [ ] Can submit a contract call path (mocked or sandbox) with clear error handling
-- [ ] `cd backend && npm test && npm run lint && npm run build` pass
-- [ ] README/SECURITY updated for confirmer key handling
+- A payment intent can produce a gateway invocation XDR for Testnet.
+- A Freighter-signed invocation can be submitted and polled to a terminal result.
+- Failed, expired, and rejected transactions map to explicit application states.
+- Explorer links and public evidence are added only after real execution.
 
 ## Tests
 
-- Mock RPC/Horizon in Jest
-- Test: successful verification, failed verification, network timeout, missing config
+Mock successful, rejected, timeout, and malformed Soroban RPC responses; add a manual Testnet verification record when credentials are available.
 
 ## Security considerations
 
-- Confirmer secret key must never be logged or committed
-- Document that server-side signing is a trust assumption
-- Rate-limit submission endpoints when exposed via HTTP
-- Default to testnet only until mainnet runbook exists
-
-## Definition of done
-
-- PR merged; backend CI green
-- Honest documentation of testnet-only status
+Keep signing in Freighter, enforce Testnet configuration, redact XDR/signature data from logs, and never commit secret keys.
 
 ## Difficulty
 
-**Advanced / Epic** — 750–1000 points
+Advanced.
+
+## Likely files/modules
+
+`backend/src/stellar/`, `backend/src/payments/`, `frontend/src/components/Payments/`, `docs/STELLAR_TESTNET_DEPLOYMENT.md`.
