@@ -70,13 +70,13 @@ Verified in the current codebase:
 | Feature | Location | Notes |
 |---------|----------|-------|
 | Soroban payment gateway | `contracts/gateway/` | Create intent, confirmer auth, confirm, rotate confirmer |
-| Soroban escrow (basic) | `contracts/escrow/` | Create payment with auth; release/refund pending |
-| Soroban multisig | `contracts/multisig/` | Propose, approve, execute (no token transfer yet) |
+| Soroban escrow | `contracts/escrow/` | Create, fund, release, refund, and expiry-aware authorization entry points |
+| Soroban multisig | `contracts/multisig/` | Threshold approvals and one-time asset transfer execution |
 | Soroban savings vault | `contracts/vault/` | Deposit, withdraw, fixed APY accrual |
 | MTN MoMo integration | `backend/src/momo/` | Collection, disbursement, status, webhooks (sandbox) |
 | USSD menu | `backend/src/ussd/` | Send money flow, balance/history/help (demo responses) |
 | Exchange-rate service | `backend/src/rates/` | Open Exchange Rates + Redis cache |
-| Freighter wallet connect | `frontend/src/` | Connect/disconnect public key in UI |
+| Freighter wallet flow | `frontend/src/` | Connect, sign Testnet payment XDR, submit, and show transaction history |
 | Health check | `backend/src/api/` | `GET /health` |
 | CI | `.github/workflows/ci.yml` | Contracts, backend, frontend jobs |
 
@@ -86,24 +86,24 @@ Verified in the current codebase:
 
 | Feature | Status |
 |---------|--------|
-| Frontend send/receive flows | Payment-intent and receive-link UI; live signing requires Testnet account |
+| Frontend send/receive flows | Payment-intent, details, explorer-link, and receive-link UI; live signing requires Testnet account |
 | Backend ↔ Stellar settlement | Horizon transaction construction and signed Testnet submission endpoints |
 | Escrow release/refund | Asset-backed lifecycle entry points implemented; deployment/e2e evidence pending |
 | Multisig asset transfer | Asset-aware threshold execution implemented; deployment/e2e evidence pending |
-| MoMo persistence | PostgreSQL-backed when `DATABASE_URL` is configured; memory fallback for local tests |
-| API security | API key guard enforced in production; local development may omit `API_KEY` |
+| MoMo and payment persistence | PostgreSQL-backed when `DATABASE_URL` is configured; memory fallback for isolated tests |
+| API security | API-key guard protects application routes; rate limiting remains planned |
 
 ---
 
 ## Planned
 
-- Payment links and reconciliation dashboard
+- QR image generation and reconciliation dashboard
 - KYC (Smile Identity / Onfido — module stub exists)
 - Notifications (SMS/push — module stub exists)
 - Airtel Money, M-Pesa integrations
 - Mainnet deployment path
-- API authentication and rate limiting
-- Durable PostgreSQL transaction storage
+- Rate limiting and centralized webhook routing
+- Live Testnet deployment and Freighter evidence
 
 ---
 
@@ -113,7 +113,7 @@ Verified in the current codebase:
 |-------|--------------|
 | Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, Jest |
 | Backend | NestJS 10, TypeScript, Jest, ioredis |
-| Contracts | Rust, Soroban SDK 21 |
+| Contracts | Rust, Soroban SDK 22 |
 | Integrations | MTN MoMo API, Open Exchange Rates, Freighter |
 | CI | GitHub Actions (Rust + Node 20) |
 
@@ -156,6 +156,7 @@ AfriPay/
 - npm
 - Rust 1.70+ and Cargo (for contracts)
 - Redis (optional; rates service degrades gracefully without it)
+- PostgreSQL (required for durable runtime persistence; tests use an in-memory fallback)
 
 ### Backend
 
@@ -237,6 +238,10 @@ CI runs backend lint + test, frontend lint + test, and contract test + clippy on
 
 Configure via `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, and `STELLAR_RPC_URL` in backend `.env`. Mainnet is not configured or tested in this repo.
 
+### Testnet evidence
+
+The contract build and local Soroban test suite are verified. Public Testnet contract IDs and a Freighter-signed payment hash are not published yet because no funded deployer or wallet was available during validation. See [the Testnet deployment runbook](docs/STELLAR_TESTNET_DEPLOYMENT.md) and [the readiness report](GRANTFOX_FINAL_READINESS_REPORT.md) for the evidence boundary.
+
 ---
 
 ## Payment Gateway Lifecycle
@@ -269,7 +274,7 @@ Confirmation on-chain requires the authorized confirmer address. MoMo status is 
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting, webhook verification, contract assumptions, and known limitations.
 
-**Important:** Backend API routes are not authenticated yet. Do not expose an unsecured deployment to the public internet.
+**Important:** Application routes require `API_KEY` in production. Provider webhooks use their dedicated token guard. Rate limiting and centralized webhook replay protection remain before public deployment.
 
 Report vulnerabilities to **security@afripay.io** — do not open public issues for security bugs.
 
