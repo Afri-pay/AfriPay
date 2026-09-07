@@ -5,4 +5,30 @@
 :root {
   --afripay-primary: #0a5c4a;
   --afripay-accent: #f2a900;
+  --afripay-ink: #102a2a;
+  --afripay-mist: #f4f8f6;
+  --afripay-line: #d9e7e1;
+}
+
+* {
+  border-color: var(--afripay-line);
+}
+
+body {
+  background: var(--afripay-mist);
+  color: var(--afripay-ink);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(242, 169, 0, 0.55);
+  outline-offset: 2px;
 }

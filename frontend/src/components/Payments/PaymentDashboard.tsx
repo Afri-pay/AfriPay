@@ -75,28 +75,40 @@ export function PaymentDashboard() {
   }
 
   return (
-    <section className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <form onSubmit={submit} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-950">Send payment</h2>
-        <p className="mt-1 text-sm text-slate-600">Create a tracked payment intent on Stellar testnet.</p>
-        <label className="mt-5 block text-sm font-medium text-slate-700">Recipient
-          <input required value={recipient} onChange={(event) => setRecipient(event.target.value)} className="mt-1 w-full rounded border border-slate-300 px-3 py-2" placeholder="G..." />
+    <section className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <form onSubmit={submit} className="rounded-lg border bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0a5c4a]">Send money</p>
+            <h2 className="mt-1 text-xl font-bold text-[#102a2a]">New payment</h2>
+          </div>
+          <span className="rounded-full bg-[#fdf3d9] px-2.5 py-1 text-xs font-bold text-[#8a5b00]">XLM</span>
+        </div>
+        <p className="mt-2 text-sm leading-5 text-slate-600">Create a tracked payment, review the details in Freighter, and submit it to Testnet.</p>
+        <label className="mt-6 block text-sm font-semibold text-slate-700">Recipient address
+          <input required value={recipient} onChange={(event) => setRecipient(event.target.value)} className="mt-2 w-full rounded-md border bg-white px-3 py-2.5 font-mono text-sm placeholder:font-sans placeholder:text-slate-400" placeholder="G..." />
         </label>
-        <div className="mt-4 grid grid-cols-[1fr_100px] gap-3">
-          <label className="text-sm font-medium text-slate-700">Amount
-            <input required inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} className="mt-1 w-full rounded border border-slate-300 px-3 py-2" placeholder="10" />
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)_96px] gap-3">
+          <label className="text-sm font-semibold text-slate-700">Amount
+            <input required inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} className="mt-2 w-full rounded-md border bg-white px-3 py-2.5 text-sm placeholder:text-slate-400" placeholder="10" />
           </label>
-          <label className="text-sm font-medium text-slate-700">Asset
-            <select value={asset} onChange={(event) => setAsset(event.target.value)} className="mt-1 w-full rounded border border-slate-300 px-3 py-2"><option>XLM</option><option>USDC</option></select>
+          <label className="text-sm font-semibold text-slate-700">Asset
+            <select value={asset} onChange={(event) => setAsset(event.target.value)} className="mt-2 w-full rounded-md border bg-white px-3 py-2.5 text-sm"><option>XLM</option><option>USDC</option></select>
           </label>
         </div>
-        <button disabled={sending} className="mt-5 w-full rounded bg-[var(--afripay-primary)] px-4 py-2 font-medium text-white disabled:opacity-60">{sending ? 'Creating...' : 'Create payment intent'}</button>
-        {message && <p role="status" className="mt-3 text-sm text-slate-600">{message}</p>}
+        <button disabled={sending} className="mt-6 w-full rounded-md bg-[var(--afripay-primary)] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#084b3d] disabled:cursor-wait disabled:opacity-60">{sending ? 'Preparing secure signature...' : 'Continue to Freighter'}</button>
+        {message && <p role="status" className="mt-3 rounded-md bg-slate-50 p-3 text-sm text-slate-600">{message}</p>}
       </form>
-      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-950">Recent payments</h2>
-        {intents.length === 0 ? <p className="mt-5 text-sm text-slate-500">No payment intents for this wallet yet.</p> : <ul className="mt-4 divide-y divide-slate-100">{intents.map((intent) => <li key={intent.id} className="flex items-center justify-between gap-4 py-3"><div><p className="font-medium text-slate-900">{intent.amount} {intent.asset}</p><p className="text-xs text-slate-500">To {intent.recipient.slice(0, 6)}...{intent.recipient.slice(-4)}</p>{intent.transactionHash && <a className="text-xs text-emerald-700 underline" href={`https://stellar.expert/explorer/testnet/tx/${intent.transactionHash}`} target="_blank" rel="noreferrer">View on Stellar Expert</a>}<button type="button" onClick={() => setSelected(intent)} className="mt-1 block text-xs text-slate-700 underline">Details</button></div><span className="text-xs font-semibold text-amber-700">{intent.status}</span></li>)}</ul>}
-        {selected && <div className="mt-4 border-t border-slate-200 pt-4 text-xs text-slate-600"><p><strong>ID:</strong> {selected.id}</p><p><strong>Recipient:</strong> {selected.recipient}</p><p><strong>Created:</strong> {new Date(selected.createdAt).toLocaleString()}</p></div>}
+      <div className="rounded-lg border bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0a5c4a]">Activity</p>
+            <h2 className="mt-1 text-xl font-bold text-[#102a2a]">Recent payments</h2>
+          </div>
+          <span className="text-xs text-slate-500">{intents.length} {intents.length === 1 ? 'payment' : 'payments'}</span>
+        </div>
+        {intents.length === 0 ? <div className="mt-6 rounded-md border border-dashed bg-slate-50 p-6 text-center"><p className="text-sm font-semibold text-slate-700">Your payment activity will appear here.</p><p className="mt-1 text-xs text-slate-500">Connect Freighter and send your first Testnet payment.</p></div> : <ul className="mt-5 divide-y divide-slate-100">{intents.map((intent) => <li key={intent.id} className="flex items-start justify-between gap-4 py-4 first:pt-0"><div className="min-w-0"><p className="font-semibold text-[#102a2a]">{intent.amount} {intent.asset}</p><p className="mt-1 truncate font-mono text-xs text-slate-500">To {intent.recipient.slice(0, 6)}...{intent.recipient.slice(-4)}</p><div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">{intent.transactionHash && <a className="text-xs font-semibold text-[#0a5c4a] underline underline-offset-2" href={`https://stellar.expert/explorer/testnet/tx/${intent.transactionHash}`} target="_blank" rel="noreferrer">View on Stellar Expert</a>}<button type="button" onClick={() => setSelected(intent)} className="text-xs font-semibold text-slate-600 underline underline-offset-2">Details</button></div></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${intent.status === 'SUCCEEDED' ? 'bg-emerald-100 text-emerald-800' : intent.status === 'FAILED' ? 'bg-red-100 text-red-800' : 'bg-[#fdf3d9] text-[#8a5b00]'}`}>{intent.status}</span></li>)}</ul>}
+        {selected && <div className="mt-4 border-t pt-4 text-xs leading-5 text-slate-600"><p><strong className="text-slate-800">Payment ID:</strong> {selected.id}</p><p><strong className="text-slate-800">Recipient:</strong> <span className="break-all font-mono">{selected.recipient}</span></p><p><strong className="text-slate-800">Created:</strong> {new Date(selected.createdAt).toLocaleString()}</p></div>}
       </div>
     </section>
   );
