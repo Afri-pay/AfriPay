@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { useFreighterWallet } from '@/hooks/useFreighterWallet';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3101';
 
 export function ReceivePayment() {
   const { address } = useFreighterWallet();
