@@ -1,6 +1,7 @@
 # Rust build artifacts (applies anywhere in the monorepo)
 **/target/
 Cargo.lock
+!contracts/Cargo.lock
 *.wasm
 
 # Node.js and frontend build output (applies anywhere in the monorepo)
