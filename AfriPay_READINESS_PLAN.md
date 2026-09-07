@@ -1,16 +1,16 @@
-# AfriPay — GrantFox Acceptance & Payment Readiness Plan
+# AfriPay — External Acceptance & Payment Readiness Plan
 
 Repository: https://github.com/Afri-pay/AfriPay
 
 ## Objective
 
-Prepare AfriPay for GrantFox submission by bringing the repository to a professional open-source standard comparable to projects that have successfully received GrantFox funding/payments.
+Prepare AfriPay for external review submission by bringing the repository to a professional open-source standard comparable to projects that have successfully received external review funding/payments.
 
-The goal is **not** to game GrantFox, fabricate activity, or guarantee payment. The goal is to make the project genuinely strong, technically credible, easy for maintainers/reviewers to evaluate, and aligned with observed GrantFox OSS contribution practices.
+The goal is **not** to game external review, fabricate activity, or guarantee payment. The goal is to make the project genuinely strong, technically credible, easy for maintainers/reviewers to evaluate, and aligned with observed external review OSS contribution practices.
 
 ---
 
-# 1. GrantFox Positioning
+# 1. External Review Positioning
 
 Position AfriPay as:
 
@@ -493,7 +493,7 @@ Include:
 
 ---
 
-# 13. GrantFox-Ready Issues
+# 13. External-Review-Ready Issues
 
 Review all open issues.
 
@@ -537,11 +537,11 @@ Clear completion requirements.
 
 Good first issue / Intermediate / Advanced / Expert.
 
-Do not add campaign labels unless they are actually appropriate and permitted by the current GrantFox/maintainer workflow.
+Do not add campaign labels unless they are actually appropriate and permitted by the current external review/maintainer workflow.
 
 ---
 
-# 14. Priority GrantFox Issues
+# 14. Priority External Review Issues
 
 Prioritize high-value issues around:
 
@@ -562,7 +562,7 @@ Each issue should represent a real engineering task, not an artificial task crea
 
 # 15. Compare Against Successful OSS Patterns
 
-Use GrantFox's official documentation plus examples of projects that have received GrantFox payments.
+Use external review's official documentation plus examples of projects that have received external review payments.
 
 Look for common qualities:
 
@@ -581,13 +581,13 @@ Look for common qualities:
 
 Distinguish between:
 
-**Official GrantFox requirements**
+**Official external review requirements**
 
 and
 
 **Observed patterns from paid projects.**
 
-Do not present repository-specific campaign rules as universal GrantFox requirements.
+Do not present repository-specific campaign rules as universal external review requirements.
 
 ---
 
@@ -644,7 +644,7 @@ Never:
 - fabricate production usage
 - fabricate audits
 - fabricate test results
-- fabricate GrantFox approval
+- fabricate external review approval
 - add meaningless commits
 - artificially manipulate GitHub activity
 
@@ -675,7 +675,7 @@ Notes:
 
 List anything that could not be fixed.
 
-## D. GrantFox Readiness Score
+## D. External Review Readiness Score
 
 Score:
 
@@ -726,21 +726,21 @@ Use the following prompt with your coding LLM:
 
 ---
 
-You are the senior engineer responsible for preparing the GitHub repository below for serious GrantFox OSS review.
+You are the senior engineer responsible for preparing the GitHub repository below for serious external review OSS review.
 
 Repository:
 
 https://github.com/Afri-pay/AfriPay
 
-Your objective is to **audit, fix, improve, test, document, and prepare the repository for GrantFox submission**.
+Your objective is to **audit, fix, improve, test, document, and prepare the repository for external review submission**.
 
 Do not merely give recommendations. Work directly on the repository and implement the fixes you can verify.
 
 ## Primary objective
 
-Make AfriPay a high-quality, credible open-source Stellar/Soroban project that is genuinely ready for external contributors and GrantFox review.
+Make AfriPay a high-quality, credible open-source Stellar/Soroban project that is genuinely ready for external contributors and external review review.
 
-Do NOT attempt to game GrantFox.
+Do NOT attempt to game external review.
 
 Do NOT fabricate:
 
@@ -752,7 +752,7 @@ Do NOT fabricate:
 - audits
 - production usage
 - payment history
-- GrantFox approval
+- external review approval
 
 Everything must remain technically truthful.
 
@@ -1001,15 +1001,15 @@ Improve issue descriptions where appropriate with:
 
 Prioritize issues that create meaningful Stellar/Soroban/payment infrastructure contributions.
 
-Do not create artificial tasks merely for GrantFox rewards.
+Do not create artificial tasks merely for external review rewards.
 
-## Phase 11 — GrantFox comparison
+## Phase 11 — external review comparison
 
 Use:
 
-https://analytics.grantfox.xyz/
+External campaign analytics are intentionally out of scope for this repository.
 
-and GrantFox's official documentation to understand the current ecosystem.
+and external review's official documentation to understand the current ecosystem.
 
 Compare AfriPay against paid projects in terms of:
 
@@ -1025,10 +1025,10 @@ Compare AfriPay against paid projects in terms of:
 
 Clearly distinguish:
 
-1. official GrantFox requirements
+1. official external review requirements
 2. observed patterns from projects that have been paid
 
-Never invent GrantFox requirements.
+Never invent external review requirements.
 
 ## Phase 12 — Final validation
 
@@ -1067,7 +1067,7 @@ Status:
 
 Anything unresolved.
 
-### GrantFox Readiness
+### External Review Readiness
 
 Score:
 
@@ -1092,7 +1092,7 @@ State one:
 
 If not ready, give the exact blockers.
 
-### Recommended GrantFox Pitch
+### Recommended external review Pitch
 
 Provide a concise, truthful project description emphasizing AfriPay's strongest differentiators.
 

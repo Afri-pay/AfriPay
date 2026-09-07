@@ -1,4 +1,4 @@
-# GrantFox Contributor Backlog
+# Contributor Backlog
 
 This backlog contains legitimate work remaining after the readiness implementation. It is a planning artifact, not evidence of published GitHub activity.
 

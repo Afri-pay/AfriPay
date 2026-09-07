@@ -249,7 +249,7 @@ The following contracts are deployed and queryable on Stellar Testnet. These are
 | Multisig | `CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67` | [View](https://stellar.expert/explorer/testnet/contract/CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67) |
 | Savings Vault | `CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II` | [View](https://stellar.expert/explorer/testnet/contract/CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II) |
 
-Deployment transactions and the remaining live-payment evidence are tracked in [the Testnet deployment runbook](docs/STELLAR_TESTNET_DEPLOYMENT.md) and [the readiness report](GRANTFOX_FINAL_READINESS_REPORT.md). A Freighter-signed payment has not yet been recorded.
+Deployment transactions and the remaining live-payment evidence are tracked in [the Testnet deployment runbook](docs/STELLAR_TESTNET_DEPLOYMENT.md) and [the readiness report](PROJECT_READINESS_REPORT.md). A Freighter-signed payment has not yet been recorded.
 
 ---
 
