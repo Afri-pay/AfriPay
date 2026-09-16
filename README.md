@@ -219,9 +219,9 @@ The repository does not contain a deployed backend URL, so production funding ca
 
 ### Deploy the backend without a credit card
 
-Render may require payment verification even for a free Blueprint. If you do not have a card, deploy the backend as a second Vercel project instead. The repository includes `backend/server.ts`, a Vercel-compatible Node/Nest entry point. Vercel documents zero-configuration Node/NestJS backend deployment [here](https://vercel.com/docs/frameworks/backend).
+Render may require payment verification even for a free Blueprint. If you do not have a card, deploy the backend as a second Vercel project instead. The repository includes an explicit Vercel Node function at `backend/api/index.ts`. Vercel documents Node/NestJS backend deployment [here](https://vercel.com/docs/frameworks/backend).
 
-In Vercel, choose **Add New → Project**, import `Afri-pay/AfriPay`, and set the project **Root Directory** to `backend`. The backend includes `backend/server.ts`, which Vercel detects as a Node/Nest server. `backend/vercel.json` only ensures the Nest build dependencies are installed; it intentionally does not define a build or output directory. Use the backend project’s generated public URL in the frontend project:
+In Vercel, choose **Add New → Project**, import `Afri-pay/AfriPay`, and set the project **Root Directory** to `backend`. `backend/vercel.json` routes all API requests to the Nest function and does not use a static output directory. Use the backend project’s generated public URL in the frontend project:
 
 ```env
 NEXT_PUBLIC_API_URL=https://<actual-vercel-backend-url>
