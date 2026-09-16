@@ -15,7 +15,8 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json());
 
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
+  const configuredPort = Number.parseInt(process.env.PORT ?? '3101', 10);
+  const port = Number.isInteger(configuredPort) && configuredPort > 0 && configuredPort < 65536 ? configuredPort : 3101;
   await app.listen(port);
   
   // eslint-disable-next-line no-console

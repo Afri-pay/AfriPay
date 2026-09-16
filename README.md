@@ -168,7 +168,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Backend runs at `http://localhost:4000` (default; override with `PORT` in `.env`).
+Backend runs at `http://localhost:3101` by default. Set the same URL in `NEXT_PUBLIC_API_URL` when using a different deployment.
 
 ### Frontend
 
