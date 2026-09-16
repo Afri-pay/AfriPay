@@ -179,7 +179,39 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Frontend runs at `http://localhost:3000`.
+Frontend runs at `http://localhost:3000`. If port `3000` is already occupied, Next.js may select another frontend port such as `3001`; the backend remains on `3101`.
+
+### Native wallet local verification
+
+Start the backend before using account balances, transaction history, or Testnet funding:
+
+```powershell
+cd backend
+npm run dev
+```
+
+The backend should log:
+
+```text
+AfriPay backend listening on port 3101
+```
+
+The frontend API URL defaults to `http://localhost:3101` and can be overridden in `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3101
+```
+
+Useful local checks:
+
+```text
+GET  http://localhost:3101/health
+GET  http://localhost:3101/stellar/accounts/{PUBLIC_KEY}
+GET  http://localhost:3101/stellar/accounts/{PUBLIC_KEY}/history
+POST http://localhost:3101/stellar/accounts/{PUBLIC_KEY}/fund-testnet
+```
+
+Testnet funding uses Friendbot and accepts only the public Stellar address. It is development functionality and does not fund Mainnet accounts. The frontend favicon is served at `/icon.svg`.
 
 ### Contracts
 
