@@ -11,6 +11,7 @@ export interface PaymentIntent {
   recipient: string;
   amount: string;
   asset: string;
+  memo?: string;
   status: PaymentIntentStatus;
   transactionHash?: string;
   createdAt: string;

@@ -15,7 +15,7 @@ AfriPay addresses slow, expensive remittance and P2P payment flows in Africa by:
 1. Recording payment intents and escrow logic on **Soroban** (Stellar smart contracts)
 2. Integrating **MTN Mobile Money** for collections and disbursements
 3. Offering a **USSD menu** for feature-phone access
-4. Providing a **Next.js frontend** with Freighter wallet connection
+4. Providing a **Next.js frontend** with a native browser wallet
 5. Caching **exchange rates** for multi-currency display
 
 The product vision is instant, low-cost transfers. The current codebase is an **MVP / testnet foundation** — see [Implemented Features](#implemented-features) for what actually works today.
@@ -39,7 +39,7 @@ The product vision is instant, low-cost transfers. The current codebase is an **
 ```text
 Next.js Frontend (port 3000)
        |
-       |  Payment intents, Freighter signing, receive links
+       |  Payment intents, native signing, receive links
        v
 NestJS Backend (port 3001)
        |
@@ -59,7 +59,7 @@ Stellar Testnet / Soroban Contracts
   - vault (savings APY)
 ```
 
-PostgreSQL-backed MoMo persistence is enabled when `DATABASE_URL` is configured; the migration runs automatically unless `MOMO_AUTO_MIGRATE=false`. Stellar submission remains Testnet-only and requires a funded account plus Freighter approval.
+PostgreSQL-backed MoMo persistence is enabled when `DATABASE_URL` is configured; the migration runs automatically unless `MOMO_AUTO_MIGRATE=false`. Stellar submission remains Testnet-only and uses the AfriPay native wallet.
 
 ---
 
@@ -76,7 +76,7 @@ Verified in the current codebase:
 | MTN MoMo integration | `backend/src/momo/` | Collection, disbursement, status, webhooks (sandbox) |
 | USSD menu | `backend/src/ussd/` | Send money flow, balance/history/help (demo responses) |
 | Exchange-rate service | `backend/src/rates/` | Open Exchange Rates + Redis cache |
-| Freighter wallet flow | `frontend/src/` | Connect, sign Testnet payment XDR, submit, and show transaction history |
+| Native wallet flow | `frontend/src/` | Create/import, encrypt, sign Testnet payments, submit, and show history |
 | Health check | `backend/src/api/` | `GET /health` |
 | CI | `.github/workflows/ci.yml` | Contracts, backend, frontend jobs |
 
@@ -103,7 +103,7 @@ Verified in the current codebase:
 - Airtel Money, M-Pesa integrations
 - Mainnet deployment path
 - Rate limiting and centralized webhook routing
-- Live Testnet deployment and Freighter evidence
+- Live Testnet deployment and native-wallet evidence
 
 ---
 
@@ -114,7 +114,7 @@ Verified in the current codebase:
 | Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, Jest |
 | Backend | NestJS 10, TypeScript, Jest, ioredis |
 | Contracts | Rust, Soroban SDK 22 |
-| Integrations | MTN MoMo API, Open Exchange Rates, Freighter |
+| Integrations | MTN MoMo API, Open Exchange Rates, native Stellar wallet |
 | CI | GitHub Actions (Rust + Node 20) |
 
 ---
@@ -138,7 +138,7 @@ AfriPay/
 │   └── src/
 │       ├── app/         # Pages
 │       ├── components/  # UI (WalletConnect)
-│       └── hooks/       # Freighter wallet hook
+│       └── hooks/       # Native wallet lifecycle hooks
 ├── docs/                # Additional documentation
 ├── .github/workflows/   # CI
 ├── CONTRIBUTING.md
@@ -249,7 +249,7 @@ The following contracts are deployed and queryable on Stellar Testnet. These are
 | Multisig | `CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67` | [View](https://stellar.expert/explorer/testnet/contract/CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67) |
 | Savings Vault | `CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II` | [View](https://stellar.expert/explorer/testnet/contract/CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II) |
 
-Deployment transactions and the remaining live-payment evidence are tracked in [the Testnet deployment runbook](docs/STELLAR_TESTNET_DEPLOYMENT.md) and [the readiness report](PROJECT_READINESS_REPORT.md). A Freighter-signed payment has not yet been recorded.
+Deployment transactions and live-payment evidence are tracked in [the Testnet deployment runbook](docs/STELLAR_TESTNET_DEPLOYMENT.md) and [the readiness report](PROJECT_READINESS_REPORT.md).
 
 ---
 
@@ -289,7 +289,7 @@ Report vulnerabilities to **security@afripay.io** — do not open public issues 
 
 ## AfriPay Native Stellar Wallet
 
-AfriPay now includes a registration-free native Stellar Testnet wallet. Visitors can create or import a wallet, set a local password, back up the recovery secret, unlock and lock the wallet, view the real XLM balance, receive via public address/QR code, and sign XLM payments locally without Freighter. Freighter remains an optional external-wallet integration.
+AfriPay now includes a registration-free native Stellar Testnet wallet. Visitors can create or import a wallet, set a local password, back up the recovery secret, unlock and lock the wallet, view real XLM and asset balances, receive via public address/QR code, view on-chain history, and sign XLM payments locally.
 
 The wallet is non-custodial: the secret seed is generated/imported and encrypted in the browser with Web Crypto AES-GCM and PBKDF2. Only public keys and signed transaction XDR cross the AfriPay API boundary; private keys never go to the backend or PostgreSQL. Read [the wallet security model](docs/WALLET_SECURITY.md) and [implementation notes](docs/NATIVE_WALLET_IMPLEMENTATION.md) before using it.
 

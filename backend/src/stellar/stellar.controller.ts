@@ -9,7 +9,10 @@ export class StellarController {
   constructor(private readonly stellar: StellarService) {}
 
   @Get('accounts/:publicKey')
-  account(@Param('publicKey') publicKey: string) { return this.stellar.loadAccount(publicKey); }
+  account(@Param('publicKey') publicKey: string) { return this.stellar.getAccountSummary(publicKey); }
+
+  @Get('accounts/:publicKey/history')
+  history(@Param('publicKey') publicKey: string) { return this.stellar.getHistory(publicKey); }
 
   @Post('submit')
   submit(@Body() body: { signedXdr?: string; publicKey?: string }) {
@@ -20,6 +23,19 @@ export class StellarController {
     } catch (error) { if (error instanceof BadRequestException) throw error; throw new BadRequestException('Invalid signed transaction'); }
     return this.stellar.submitSignedTransaction(body.signedXdr);
   }
+
+  @Post('soroban/prepare')
+  prepareSoroban(@Body() body: { xdr?: string; publicKey?: string }) {
+    return this.stellar.prepareSorobanTransaction(body?.xdr ?? '', body?.publicKey ?? '');
+  }
+
+  @Post('soroban/submit')
+  submitSoroban(@Body() body: { signedXdr?: string; publicKey?: string }) {
+    return this.stellar.submitSorobanTransaction(body?.signedXdr ?? '', body?.publicKey ?? '');
+  }
+
+  @Get('soroban/transactions/:hash')
+  getSoroban(@Param('hash') hash: string) { return this.stellar.getSorobanTransaction(hash); }
 
   @Post('accounts/:publicKey/fund-testnet')
   fund(@Param('publicKey') publicKey: string) { return this.stellar.fundTestnet(publicKey); }

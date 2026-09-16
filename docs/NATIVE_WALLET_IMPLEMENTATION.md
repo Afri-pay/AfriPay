@@ -15,15 +15,15 @@ Private keys do not go to the backend.
 
 ## Files
 
-The frontend adds `src/lib/wallet.ts`, `src/lib/stellar.ts`, `src/hooks/useNativeWallet.ts`, and `src/components/Wallet/NativeWallet.tsx`. The backend adds `src/stellar/stellar.controller.ts` and extends `StellarService` with account loading and Testnet funding. Existing Freighter and payment components remain available as an optional external path.
+The frontend adds `src/lib/wallet.ts`, `src/lib/stellar.ts`, `src/hooks/useNativeWallet.ts`, and `src/components/Wallet/NativeWallet.tsx`. The backend adds `src/stellar/stellar.controller.ts` and extends `StellarService` with account summaries, history, Testnet funding, and Soroban RPC transaction preparation/submission.
 
 ## Signing and network
 
-Native XLM payments load the source account from Horizon, build and sign a Testnet transaction in the browser, then submit signed XDR. The backend verifies the signed transaction source matches the supplied public key before submission. Testnet configuration is centralized in the frontend environment and existing backend environment. Soroban contracts and IDs were preserved; a complete native Soroban RPC client remains a follow-up because the current repository has no frontend Soroban invocation flow.
+Native XLM payments load the source account from Horizon, build and sign a Testnet transaction in the browser, then submit signed XDR. The backend verifies the signed transaction source matches the supplied public key before submission. Soroban transactions can be simulated/prepared and submitted through Testnet RPC endpoints using the same local native signer boundary. Testnet configuration is centralized in the frontend and backend environments.
 
 ## Tests and limitations
 
-The existing tests and build commands remain the verification baseline. The new wallet service should receive browser-crypto unit coverage before Mainnet. Current UI balance loading uses Horizon directly and reports account-not-found/network states; history reconciliation and full asset/Soroban dashboard integration are not yet complete.
+The existing tests and build commands remain the verification baseline. Current UI balance loading and history use backend-proxied Horizon data, with account activation and network error states. Mainnet remains disabled.
 
 ## Mainnet checklist
 

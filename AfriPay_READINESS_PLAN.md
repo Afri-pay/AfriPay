@@ -127,7 +127,7 @@ Examples to verify:
 - Soroban escrow/payment logic
 - Payment gateway
 - Payment intents
-- Stellar wallet/Freighter connection
+- Native Stellar wallet connection
 - Multisig
 - Savings vault
 - MTN Mobile Money integration

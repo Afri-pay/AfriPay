@@ -204,7 +204,7 @@ yarn install
 - Git installed
 - GitHub account
 - Code editor (VS Code recommended)
-- Stellar wallet (Freighter for testing)
+- Stellar native wallet (Testnet for testing)
 
 ### Fork & Clone
 

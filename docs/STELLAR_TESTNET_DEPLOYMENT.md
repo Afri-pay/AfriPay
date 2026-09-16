@@ -49,11 +49,11 @@ Repeat for `escrow.wasm`, `multisig.wasm`, and `vault.wasm`. After deployment, v
 
 ## Payment evidence
 
-The frontend uses Freighter to sign a transaction built by the backend and submits the signed envelope to Horizon Testnet. A successful payment must be recorded with:
+The frontend native wallet signs transactions locally and submits the signed envelope to Horizon Testnet. A successful payment must be recorded with:
 
 - the actual transaction hash;
 - the Stellar Expert or Stellar Laboratory Testnet URL;
 - sender, recipient, asset, and amount;
 - the AfriPay payment-intent ID.
 
-No live evidence is recorded until a funded account and Freighter approval are available.
+No live evidence is recorded until a funded Testnet account and native-wallet approval are available.

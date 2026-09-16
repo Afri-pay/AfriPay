@@ -17,3 +17,26 @@ export async function buildAndSignXlmPayment(secret: string, recipient: string, 
   transaction.sign(source);
   return transaction.toXDR();
 }
+
+export function signTransactionXdr(secret: string, xdr: string) {
+  if (!StrKey.isValidEd25519SecretSeed(secret)) throw new Error('Unable to unlock wallet');
+  const source = Keypair.fromSecret(secret);
+  const transaction = TransactionBuilder.fromXDR(xdr, TESTNET_PASSPHRASE);
+  if (!('source' in transaction) || transaction.source !== source.publicKey()) throw new Error('Transaction source does not match wallet');
+  transaction.sign(source);
+  return transaction.toXDR();
+}
+
+export async function prepareSorobanTransaction(apiUrl: string, xdr: string, publicKey: string, apiKey?: string) {
+  const response = await fetch(`${apiUrl}/stellar/soroban/prepare`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(apiKey ? { 'x-api-key': apiKey } : {}) }, body: JSON.stringify({ xdr, publicKey }) });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message ?? 'Soroban preparation failed');
+  return result as { xdr: string; network: 'testnet' };
+}
+
+export async function submitSorobanTransaction(apiUrl: string, signedXdr: string, publicKey: string, apiKey?: string) {
+  const response = await fetch(`${apiUrl}/stellar/soroban/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(apiKey ? { 'x-api-key': apiKey } : {}) }, body: JSON.stringify({ signedXdr, publicKey }) });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message ?? 'Soroban submission failed');
+  return result as { hash: string; status: string; explorerUrl: string };
+}

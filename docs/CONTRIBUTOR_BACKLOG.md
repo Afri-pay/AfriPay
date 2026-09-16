@@ -6,11 +6,11 @@ This backlog contains legitimate work remaining after the readiness implementati
 
 **Problem/context:** The backend currently builds and submits native XLM payments on Testnet, but the deployed payment-gateway contract invocation and confirmation path need a complete Soroban RPC integration.
 
-**Technical scope:** Add Testnet-only Soroban invocation helpers, transaction polling, terminal-state mapping, and mocked RPC tests. Preserve Freighter user signing and add a manual evidence runbook.
+**Technical scope:** Add Testnet-only Soroban invocation helpers, transaction polling, terminal-state mapping, and mocked RPC tests using the native local signer boundary.
 
 **Out of scope:** Mainnet, custodial private keys, or fabricated deployment evidence.
 
-**Acceptance criteria:** A payment intent produces a gateway invocation XDR, Freighter can sign it, the backend submits and polls it, and failures map to explicit states.
+**Acceptance criteria:** A payment intent produces a gateway invocation XDR, the native browser wallet can sign it, the backend submits and polls it, and failures map to explicit states.
 
 **Tests:** Mock success, rejection, timeout, malformed response, and polling cases; perform one real Testnet verification when credentials are available.
 

@@ -42,9 +42,9 @@ Out of scope: third-party services (MTN, Africa's Talking, Stellar network infra
 
 ## Wallet Security
 
-- AfriPay's frontend connects to [Freighter](https://www.freighter.app/) for non-custodial wallet access.
+- AfriPay's frontend uses a native browser wallet for non-custodial wallet access.
 - Private keys remain in the user's wallet extension; AfriPay does not store them.
-- Users must verify transaction details in Freighter before signing.
+- Users must verify transaction details in AfriPay before signing.
 - There is no backend wallet custody layer implemented yet.
 
 ---

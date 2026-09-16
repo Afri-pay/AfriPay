@@ -2,13 +2,13 @@
 
 ## Executive summary
 
-This audit found a promising but early-stage AfriPay monorepo: a Next.js wallet-connect shell, a NestJS MoMo/rates/USSD backend, and four Soroban crates. This pass adds a tracked payment-intent API/UI, Horizon transaction construction, Freighter signing and Testnet submission, explicit escrow lifecycle methods, an asset-aware multisig execution path, MoMo idempotency protections, PostgreSQL-backed loading/persistence, scheduled reconciliation, API-key protection, and USSD session validation. The four Soroban contracts are now deployed and queryable on Stellar Testnet; a Freighter-signed payment and live MoMo sandbox call remain outstanding.
+This audit found a promising but early-stage AfriPay monorepo: a Next.js wallet shell, a NestJS MoMo/rates/USSD backend, and four Soroban crates. The project includes a tracked payment-intent API/UI, Horizon transaction construction, native Testnet signing and submission, explicit escrow lifecycle methods, an asset-aware multisig execution path, MoMo idempotency protections, PostgreSQL-backed loading/persistence, scheduled reconciliation, API-key protection, and USSD session validation. The four Soroban contracts are deployed and queryable on Stellar Testnet.
 
 No contract IDs, transaction hashes, live demo links, contributor counts, stars, forks, or PR activity were fabricated.
 
 ## Original state found during audit
 
-- Frontend: Next.js 14 with a single wallet connection page and one Freighter component test.
+- Frontend: Next.js 14 with a native wallet page and wallet regression tests.
 - Backend: NestJS modules for rates, MoMo, USSD, health, and empty payments/Stellar module shells.
 - MoMo: sandbox request/status/webhook behavior exists and is unit tested; state uses PostgreSQL when configured and an in-memory fallback for isolated tests.
 - USSD: menu and prompt flow exist, but session persistence and real payment initiation are absent.
@@ -73,7 +73,7 @@ Executed:
 | Escrow Testnet deployment | PASS | `CCAL4FLLFKKCAT5NBFSDB7RH6GJYNBAPBJNIIJO5PZOEPHB23HXGCTCY`; [deployment tx](https://stellar.expert/explorer/testnet/tx/457b0db4ceb5738e728bfab49ee685be1adb78971c8b53989e9e222c7313477e) |
 | Multisig Testnet deployment | PASS | `CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67`; [deployment tx](https://stellar.expert/explorer/testnet/tx/9680343138462b2fa9f807b6405e5f20e799cb2cbb0f7be472deb0e6285866f9) |
 | Savings Vault Testnet deployment | PASS | `CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II`; [deployment tx](https://stellar.expert/explorer/testnet/tx/73b0e25704889f288edacfb62b549d1ad9c9072aed8fd3786c45f397b41415cf) |
-| Freighter-signed Testnet payment | BLOCKED | Funded deployer exists, but no browser Freighter approval/session was completed |
+| Native-wallet Testnet payment | PENDING EVIDENCE | Requires a funded browser Testnet session and explicit user approval |
 | PostgreSQL live persistence | PASS | Docker PostgreSQL 16; migration, API write, direct query, backend restart, and reload verification passed |
 | MTN MoMo sandbox | BLOCKED | Official sandbox credentials unavailable |
 | Backend tests | PASS | 11 suites / 46 tests |
@@ -99,7 +99,7 @@ Added `backend/migrations/001_payment_state.sql` as an explicit PostgreSQL schem
 
 ## Testnet evidence
 
-The four contracts were deployed with Stellar CLI 28.0.0 from the official `stellar/stellar-cli` container using a dedicated Friendbot-funded Testnet deployer. Contract IDs, upload/deploy hashes, and explorer links are recorded in `docs/STELLAR_TESTNET_DEPLOYMENT.md`. No Freighter payment hash has been recorded yet.
+The four contracts were deployed with Stellar CLI 28.0.0 from the official `stellar/stellar-cli` container using a dedicated Friendbot-funded Testnet deployer. Contract IDs, upload/deploy hashes, and explorer links are recorded in `docs/STELLAR_TESTNET_DEPLOYMENT.md`.
 
 ## Security findings and fixes
 
@@ -111,7 +111,7 @@ The four contracts were deployed with Stellar CLI 28.0.0 from the official `stel
 
 ## External credential blockers
 
-Real MTN MoMo sandbox calls require provider credentials. Freighter evidence requires a browser session with the funded Testnet wallet and an explicit user approval. The CLI/deployer blocker is cleared; the remaining external blockers are Freighter interaction and official MoMo sandbox credentials.
+Real MTN MoMo sandbox calls require provider credentials. Testnet payment evidence requires a browser session with a funded native wallet and explicit user approval. The CLI/deployer blocker is cleared; official MoMo sandbox credentials remain external.
 
 ## Items intentionally left for external contributors
 
@@ -140,6 +140,6 @@ The detailed backlog in `docs/CONTRIBUTOR_BACKLOG.md` covers Soroban settlement 
 
 1. Configure a funded Testnet deployer and Stellar CLI, deploy each WASM artifact, and record explorer-verified IDs/hashes.
 2. Configure PostgreSQL and MTN MoMo sandbox credentials, then exercise migration/reconciliation paths end to end.
-3. Run the frontend with Freighter on Testnet and record one verified payment hash.
+3. Run the frontend with the native wallet on Testnet and record one verified payment hash.
 4. Plan a coordinated Nest 12/Next security upgrade, with compatibility tests before merging.
 5. Add CI coverage for database-backed integration tests and the Rust toolchain environment.

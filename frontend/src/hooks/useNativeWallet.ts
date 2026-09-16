@@ -8,6 +8,14 @@ export function useNativeWallet() {
   const [secret, setSecret] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => { setEncrypted(readEncryptedWallet()); setReady(true); }, []);
+  useEffect(() => {
+    if (!secret) return;
+    let timer = window.setTimeout(() => { setSecret(null); setAddress(null); }, 15 * 60 * 1000);
+    const reset = () => { window.clearTimeout(timer); timer = window.setTimeout(() => { setSecret(null); setAddress(null); }, 15 * 60 * 1000); };
+    const events = ['pointerdown', 'keydown', 'touchstart'] as const;
+    events.forEach((event) => window.addEventListener(event, reset));
+    return () => { window.clearTimeout(timer); events.forEach((event) => window.removeEventListener(event, reset)); };
+  }, [secret]);
 
   const create = useCallback(async (password: string) => {
     const pair = generateKeypair();

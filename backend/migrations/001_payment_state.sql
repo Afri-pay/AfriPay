@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS payment_intents (
   recipient TEXT NOT NULL,
   amount NUMERIC(30, 12) NOT NULL CHECK (amount > 0),
   asset TEXT NOT NULL,
+  memo TEXT,
   status TEXT NOT NULL CHECK (status IN ('PENDING', 'SUCCEEDED', 'FAILED')),
   transaction_hash TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -51,6 +52,8 @@ CREATE TABLE IF NOT EXISTS payment_links (
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE payment_intents ADD COLUMN IF NOT EXISTS memo TEXT;
 
 CREATE INDEX IF NOT EXISTS payment_intents_sender_idx
   ON payment_intents (sender, created_at DESC);

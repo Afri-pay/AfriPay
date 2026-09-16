@@ -4,7 +4,7 @@ Next.js 14 (App Router) + TypeScript + TailwindCSS, PWA-enabled.
 
 - `src/app/` — Next.js pages
 - `src/components/` — React components (Send, Receive, Wallet, History, Settings)
-- `src/hooks/` — Custom React hooks
+- `src/hooks/` — Native wallet lifecycle hooks
 - `src/lib/` — Utilities
 - `src/styles/` — Global styles
 - `public/` — Static assets

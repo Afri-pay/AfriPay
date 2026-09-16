@@ -8,6 +8,7 @@ interface CreatePaymentBody {
   recipient: string;
   amount: string;
   asset: string;
+  memo?: string;
 }
 
 @Controller('payments')
@@ -34,13 +35,13 @@ export class PaymentIntentController {
   @Post('intents/:id/transaction')
   async buildTransaction(@Param('id') id: string) {
     const intent = this.payments.get(id);
-    return this.stellar.buildNativePayment(intent.sender, intent.recipient, intent.amount);
+    return this.stellar.buildNativePayment(intent.sender, intent.recipient, intent.amount, intent.memo);
   }
 
   @Post('intents/:id/submit')
   async submit(@Param('id') id: string, @Body() body: { signedXdr: string }) {
-    this.payments.get(id);
-    const result = await this.stellar.submitSignedTransaction(body?.signedXdr);
+    const intent = this.payments.get(id);
+    const result = await this.stellar.submitSignedTransaction(body?.signedXdr, intent.sender);
     return this.payments.markSubmitted(id, result.hash);
   }
 
