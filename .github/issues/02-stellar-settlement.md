@@ -4,7 +4,7 @@ Add Soroban contract invocation and transaction verification to the existing Tes
 
 ## Current behavior
 
-AfriPay builds native XLM payment transactions through Horizon, supports Freighter signing, and submits signed XDR on Testnet. The backend does not yet invoke the deployed payment-gateway contract or verify a confirmed Soroban result end to end.
+AfriPay builds native XLM payment transactions through Horizon, supports local native-wallet signing, and submits signed XDR on Testnet. The backend does not yet invoke the deployed payment-gateway contract or verify a confirmed Soroban result end to end.
 
 ## Technical scope
 
@@ -20,7 +20,7 @@ Mainnet deployment, custodial private keys, unrelated contract features, or fabr
 ## Acceptance criteria
 
 - A payment intent can produce a gateway invocation XDR for Testnet.
-- A Freighter-signed invocation can be submitted and polled to a terminal result.
+- A locally signed native-wallet invocation can be submitted and polled to a terminal result.
 - Failed, expired, and rejected transactions map to explicit application states.
 - Explorer links and public evidence are added only after real execution.
 
@@ -30,7 +30,7 @@ Mock successful, rejected, timeout, and malformed Soroban RPC responses; add a m
 
 ## Security considerations
 
-Keep signing in Freighter, enforce Testnet configuration, redact XDR/signature data from logs, and never commit secret keys.
+Keep signing in the user-controlled wallet, enforce Testnet configuration, redact XDR/signature data from logs, and never commit secret keys.
 
 ## Difficulty
 
@@ -38,4 +38,4 @@ Advanced.
 
 ## Likely files/modules
 
-`backend/src/stellar/`, `backend/src/payments/`, `frontend/src/components/Payments/`, `docs/STELLAR_TESTNET_DEPLOYMENT.md`.
+`backend/src/stellar/`, `backend/src/payments/`, `frontend/src/components/Wallet/`, `docs/STELLAR_TESTNET_DEPLOYMENT.md`.

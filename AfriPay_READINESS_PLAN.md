@@ -556,13 +556,13 @@ Prioritize high-value issues around:
 9. Webhook/reconciliation infrastructure
 10. Security and test improvements
 
-Each issue should represent a real engineering task, not an artificial task created only to obtain rewards.
+Each issue should represent a real engineering task with a clear user or maintainer benefit.
 
 ---
 
 # 15. Compare Against Successful OSS Patterns
 
-Use external review's official documentation plus examples of projects that have received external review payments.
+Use established open-source project practices and examples of well-maintained repositories.
 
 Look for common qualities:
 
@@ -1001,15 +1001,11 @@ Improve issue descriptions where appropriate with:
 
 Prioritize issues that create meaningful Stellar/Soroban/payment infrastructure contributions.
 
-Do not create artificial tasks merely for external review rewards.
+Do not create artificial tasks or inflate issue scope.
 
 ## Phase 11 — external review comparison
 
-Use:
-
-External campaign analytics are intentionally out of scope for this repository.
-
-and external review's official documentation to understand the current ecosystem.
+Use repository health, contributor experience, technical quality, and project impact to understand the current ecosystem.
 
 Compare AfriPay against paid projects in terms of:
 
