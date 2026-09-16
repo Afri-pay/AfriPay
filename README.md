@@ -1,392 +1,290 @@
 # AfriPay
 
-**Open-source Stellar payment infrastructure for African cross-border payments**, combining Soroban smart contracts with mobile-money, USSD, and traditional payment rails.
+**Cross-border payments, built for Africa.**
 
-AfriPay helps diaspora and local users move value quickly and transparently. The project is under active development and targets **Stellar Testnet** and **MTN MoMo sandbox** by default.
+AfriPay is an open-source Stellar-powered payment platform with a registration-free native browser wallet, XLM payment APIs, Soroban contract workspace, and mobile-money/USSD integration modules.
 
-Repository: https://github.com/Afri-pay/AfriPay
+> **Current network: Stellar Testnet.** Testnet XLM has no monetary value. AfriPay is under active development and is not Mainnet-ready.
 
----
+- Live application: https://afri-pay-beta.vercel.app/
+- Backend API: https://afripay-api-seven.vercel.app/
+- Repository: https://github.com/Afri-pay/AfriPay
 
-## What AfriPay Does
+## Overview
 
-AfriPay addresses slow, expensive remittance and P2P payment flows in Africa by:
+AfriPay combines a Next.js wallet interface with a NestJS API and Rust/Soroban contracts. The native wallet is the primary wallet experience: users can create or import a Stellar account without creating an AfriPay account or installing Freighter.
 
-1. Recording payment intents and escrow logic on **Soroban** (Stellar smart contracts)
-2. Integrating **MTN Mobile Money** for collections and disbursements
-3. Offering a **USSD menu** for feature-phone access
-4. Providing a **Next.js frontend** with a native browser wallet
-5. Caching **exchange rates** for multi-currency display
+The backend provides Stellar account and transaction endpoints, Testnet Friendbot funding, Soroban transaction preparation/submission, payment-intent workflows, MTN MoMo modules, USSD routes, exchange-rate caching, and application metadata persistence when PostgreSQL is configured.
 
-The product vision is instant, low-cost transfers. The current codebase is an **MVP / testnet foundation** — see [Implemented Features](#implemented-features) for what actually works today.
+## Features
 
----
+### Implemented
 
-## Why Stellar? Why Soroban? Why Africa?
+- Native Stellar Testnet wallet creation and import/restore
+- Local password encryption, unlock, lock, backup, and device removal
+- Local XLM transaction signing with Stellar SDK
+- Public-address receive flow and QR code
+- Stellar Testnet account funding through Friendbot
+- Real Horizon account balances and payment history
+- Signed transaction submission and Testnet explorer links
+- Soroban preparation, submission, and transaction polling API routes
+- Soroban Rust contract unit tests
+- MTN MoMo collection, disbursement, status, and webhook modules in sandbox configuration
+- USSD controller flows for balance, history, help, and send-money demonstrations
+- Open Exchange Rates integration with optional Redis caching
+- Vercel-hosted frontend and backend deployment configuration
 
-| Choice | Rationale |
-|--------|-----------|
-| **Stellar** | Fast finality (~3–5s), low fees, native multi-currency assets, strong presence in emerging markets |
-| **Soroban** | On-chain payment intents, escrow, multisig, and savings logic with deterministic execution |
-| **Africa** | Mobile-money-first economies, USSD access, high remittance demand, fragmented payment rails |
+### Partially implemented
 
-**Intended users:** diaspora senders, local recipients on mobile money, developers integrating payment APIs, and OSS contributors building Stellar payment infrastructure.
+- Native XLM send uses the payment-intent API and local signing; production use requires the corresponding API configuration and an activated Testnet account.
+- Payment links have backend create/read routes and frontend creation UI; full payment reconciliation remains in progress.
+- Soroban contracts contain tested core logic, but complete application UI flows and independent deployment evidence are not complete for every contract.
+- PostgreSQL persistence is available for payment/MoMo metadata when DATABASE_URL is configured; isolated tests use memory fallbacks.
 
----
+### Planned
 
-## Core Architecture
+- Independent wallet and application security review
+- Broader Stellar asset UX
+- Complete mobile-money production integrations and reconciliation
+- KYC and notification provider integrations
+- Rate limiting and centralized webhook replay protection
+- Mainnet-specific configuration and launch process
 
-```text
-Next.js Frontend (port 3000)
-       |
-       |  Payment intents, native signing, receive links
-       v
-NestJS Backend (port 3001)
-       |
-       +---- Health / Rates API
-       |
-       +---- MTN MoMo (collection, disbursement, webhooks)
-       |
-       +---- USSD (Africa's Talking callback)
-       |
-       +---- Redis (exchange-rate cache, optional)
-       |
-       v
-Stellar Testnet / Soroban Contracts
-  - gateway (payment intents)
-  - escrow (P2P escrow)
-  - multisig (threshold approvals)
-  - vault (savings APY)
-```
+## Native Stellar Wallet
 
-PostgreSQL-backed MoMo persistence is enabled when `DATABASE_URL` is configured; the migration runs automatically unless `MOMO_AUTO_MIGRATE=false`. Stellar submission remains Testnet-only and uses the AfriPay native wallet.
+The AfriPay native wallet does not require an AfriPay account, email registration, Freighter, or another browser wallet.
 
----
+    Create or import wallet
+             ↓
+    Encrypt locally with wallet password
+             ↓
+    Back up recovery secret offline
+             ↓
+    Fund Stellar Testnet account
+             ↓
+    View balance, receive, sign/send, and view history
 
-## Implemented Features
+Supported actions include:
 
-Verified in the current codebase:
+- Create a Stellar keypair in the browser
+- Import an existing Stellar secret seed in the browser
+- Encrypt the secret locally
+- Unlock and lock the wallet
+- Back up the recovery secret
+- Copy the public address and display a public-address QR code
+- Remove the encrypted wallet from the current device after confirmation
 
-| Feature | Location | Notes |
-|---------|----------|-------|
-| Soroban payment gateway | `contracts/gateway/` | Create intent, confirmer auth, confirm, rotate confirmer |
-| Soroban escrow | `contracts/escrow/` | Create, fund, release, refund, and expiry-aware authorization entry points |
-| Soroban multisig | `contracts/multisig/` | Threshold approvals and one-time asset transfer execution |
-| Soroban savings vault | `contracts/vault/` | Deposit, withdraw, fixed APY accrual |
-| MTN MoMo integration | `backend/src/momo/` | Collection, disbursement, status, webhooks (sandbox) |
-| USSD menu | `backend/src/ussd/` | Send money flow, balance/history/help (demo responses) |
-| Exchange-rate service | `backend/src/rates/` | Open Exchange Rates + Redis cache |
-| Native wallet flow | `frontend/src/` | Create/import, encrypt, sign Testnet payments, submit, and show history |
-| Health check | `backend/src/api/` | `GET /health` |
-| CI | `.github/workflows/ci.yml` | Contracts, backend, frontend jobs |
+### Wallet security
 
----
+The secret seed is generated or imported in the browser. It is encrypted with Web Crypto AES-GCM using a PBKDF2-SHA-256 derived key, random salt, and random IV before being stored in versioned local browser storage. The secret is decrypted into memory only while unlocked.
 
-## In Progress
+The AfriPay API receives public addresses and signed transaction data. Raw wallet secrets must never be sent to the backend, logged, or stored in PostgreSQL.
 
-| Feature | Status |
-|---------|--------|
-| Frontend send/receive flows | Payment-intent, details, explorer-link, and receive-link UI; live signing requires Testnet account |
-| Backend ↔ Stellar settlement | Horizon transaction construction and signed Testnet submission endpoints |
-| Escrow release/refund | Asset-backed lifecycle entry points implemented; deployment/e2e evidence pending |
-| Multisig asset transfer | Asset-aware threshold execution implemented; deployment/e2e evidence pending |
-| MoMo and payment persistence | PostgreSQL-backed when `DATABASE_URL` is configured; memory fallback for isolated tests |
-| API security | API-key guard protects application routes; rate limiting remains planned |
+This protects stored wallet data from casual inspection, but not an unlocked browser, malicious extensions, malware, or XSS. AfriPay has not had an independent security audit. Losing both the device wallet and recovery backup can permanently remove access to the account.
 
----
+Read docs/WALLET_SECURITY.md and docs/NATIVE_WALLET_IMPLEMENTATION.md.
 
-## Planned
+## Architecture
 
-- QR image generation and reconciliation dashboard
-- KYC (Smile Identity / Onfido — module stub exists)
-- Notifications (SMS/push — module stub exists)
-- Airtel Money, M-Pesa integrations
-- Mainnet deployment path
-- Rate limiting and centralized webhook routing
-- Live Testnet deployment and native-wallet evidence
+    User
+      |
+      v
+    AfriPay Next.js frontend
+      |-- Native wallet: local encryption and signing
+      |-- Stellar Horizon and Soroban RPC
+      |-- public address and signed XDR --> AfriPay NestJS API
+                                            |-- Stellar Horizon/RPC
+                                            |-- Stellar Testnet
+                                            |-- PostgreSQL application metadata
 
----
+PRIVATE KEYS DO NOT GO TO THE BACKEND.
 
 ## Technology Stack
 
-| Layer | Technologies |
-|-------|--------------|
-| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS, Jest |
-| Backend | NestJS 10, TypeScript, Jest, ioredis |
-| Contracts | Rust, Soroban SDK 22 |
-| Integrations | MTN MoMo API, Open Exchange Rates, native Stellar wallet |
-| CI | GitHub Actions (Rust + Node 20) |
-
----
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14 App Router, React 18, TypeScript |
+| Styling | Tailwind CSS and global CSS design tokens |
+| Frontend tests | Jest and Testing Library |
+| Backend | NestJS 10 and TypeScript |
+| Database | PostgreSQL through pg/TypeORM where configured |
+| Cache | Redis through ioredis, optional |
+| Blockchain | Stellar SDK 13, Horizon, Soroban RPC |
+| Smart contracts | Rust and Soroban SDK 22 |
+| Hosting | Vercel frontend and Vercel Node backend |
+| CI | GitHub Actions, Node 20, Rust stable |
 
 ## Project Structure
 
-```text
-AfriPay/
-├── contracts/           # Soroban smart contracts (Rust workspace)
-│   ├── gateway/         # Payment intent lifecycle
-│   ├── escrow/          # P2P escrow
-│   ├── multisig/        # Multi-signature approvals
-│   └── vault/           # Savings vault
-├── backend/             # NestJS API
-│   └── src/
-│       ├── api/         # Health
-│       ├── momo/        # MTN Mobile Money
-│       ├── ussd/        # USSD gateway
-│       └── rates/       # Exchange rates
-├── frontend/            # Next.js app
-│   └── src/
-│       ├── app/         # Pages
-│       ├── components/  # UI (WalletConnect)
-│       └── hooks/       # Native wallet lifecycle hooks
-├── docs/                # Additional documentation
-├── .github/workflows/   # CI
-├── CONTRIBUTING.md
-├── SECURITY.md
-└── CODE_OF_CONDUCT.md
-```
+    AfriPay/
+    ├── frontend/              Next.js application
+    │   └── src/
+    │       ├── app/           routes and metadata
+    │       ├── components/    wallet and UI components
+    │       ├── hooks/         native wallet lifecycle
+    │       ├── lib/           API, wallet, and Stellar helpers
+    │       └── styles/        global design tokens
+    ├── backend/               NestJS API
+    │   ├── api/               Vercel Node function entry point
+    │   ├── migrations/        PostgreSQL migrations
+    │   └── src/
+    │       ├── payments/      payment intents and links
+    │       ├── stellar/       Horizon, Friendbot, and Soroban routes
+    │       ├── momo/          MTN MoMo services and webhooks
+    │       ├── rates/         exchange rates
+    │       └── ussd/          USSD routes
+    ├── contracts/              Soroban Rust workspace
+    ├── docs/                   security and implementation notes
+    └── .github/workflows/      CI checks
 
----
-
-## Local Development
+## Getting Started
 
 ### Prerequisites
 
 - Node.js 20+
 - npm
-- Rust 1.70+ and Cargo (for contracts)
-- Redis (optional; rates service degrades gracefully without it)
-- PostgreSQL (required for durable runtime persistence; tests use an in-memory fallback)
+- Rust and Cargo for Soroban contracts
+- PostgreSQL for durable application metadata
+- Redis is optional for exchange-rate caching
 
-### Backend
+### Install
 
-```bash
-cd backend
-npm ci
-cp .env.example .env
-# Edit .env with your sandbox credentials
-npm run dev
-```
+    git clone https://github.com/Afri-pay/AfriPay.git
+    cd AfriPay
+    cd backend
+    npm ci
+    copy .env.example .env
+    cd ../frontend
+    npm ci
+    copy .env.example .env.local
 
-Backend runs at `http://localhost:3101` by default. Set the same URL in `NEXT_PUBLIC_API_URL` when using a different deployment.
+On macOS/Linux, replace copy with cp.
 
-### Frontend
+### Local environment
 
-```bash
-cd frontend
-npm ci
-cp .env.example .env.local
-npm run dev
-```
+Backend defaults:
 
-Frontend runs at `http://localhost:3000`. If port `3000` is already occupied, Next.js may select another frontend port such as `3001`; the backend remains on `3101`.
+    PORT=3101
+    NODE_ENV=development
+    STELLAR_NETWORK=testnet
+    STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
+    STELLAR_RPC_URL=https://soroban-testnet.stellar.org
+    FRONTEND_ORIGIN=http://localhost:3000
 
-### Native wallet local verification
+Frontend local API:
 
-Start the backend before using account balances, transaction history, or Testnet funding:
+    NEXT_PUBLIC_API_URL=http://localhost:3101
+    NEXT_PUBLIC_STELLAR_NETWORK=testnet
 
-```powershell
-cd backend
-npm run dev
-```
+Use backend/.env.example and frontend/.env.example as the source of truth. Never commit real credentials, database passwords, private keys, or recovery secrets.
 
-The backend should log:
+### Run locally
 
-```text
-AfriPay backend listening on port 3101
-```
+Terminal 1:
 
-The frontend API URL defaults to `http://localhost:3101` and can be overridden in `frontend/.env.local`:
+    cd backend
+    npm run dev
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3101
-```
+Terminal 2:
 
-For the deployed frontend, configure the Vercel environment variable with the public backend URL. Do not use `localhost` in production:
+    cd frontend
+    npm run dev
 
-```env
-NEXT_PUBLIC_API_URL=https://PUBLIC_BACKEND_URL
-```
+Default URLs:
 
-Configure the backend deployment with:
+- Frontend: http://localhost:3000
+- Backend: http://localhost:3101
+- Health: http://localhost:3101/health
 
-```env
-PORT=3101
-FRONTEND_ORIGIN=https://afri-pay-beta.vercel.app
-```
+If port 3000 is occupied, Next.js may select another frontend port. The backend remains on 3101.
 
-The repository does not contain a deployed backend URL, so production funding cannot work until a backend is deployed and its public URL is supplied to Vercel.
+## API Endpoints
 
-### Deploy the backend without a credit card
+    GET  /health
+    GET  /stellar/accounts/:publicKey
+    GET  /stellar/accounts/:publicKey/history
+    POST /stellar/accounts/:publicKey/fund-testnet
+    POST /stellar/submit
+    POST /stellar/soroban/prepare
+    POST /stellar/soroban/submit
+    GET  /stellar/soroban/transactions/:hash
 
-Render may require payment verification even for a free Blueprint. If you do not have a card, deploy the backend as a second Vercel project instead. The repository includes an explicit Vercel Node function at `backend/api/index.ts`. Vercel documents Node/NestJS backend deployment [here](https://vercel.com/docs/frameworks/backend).
+Payment-intent and payment-link routes are under /payments. Application routes may require API_KEY depending on route and deployment configuration. Never send a wallet secret seed to any endpoint.
 
-In Vercel, choose **Add New → Project**, import `Afri-pay/AfriPay`, and set the project **Root Directory** to `backend`. `backend/vercel.json` routes all API requests to the Nest function and does not use a static output directory. Use the backend project’s generated public URL in the frontend project:
+## Trying AfriPay on Stellar Testnet
 
-```env
-NEXT_PUBLIC_API_URL=https://<actual-vercel-backend-url>
-```
+1. Open the live application or run the frontend locally.
+2. Create or import a native wallet.
+3. Set a wallet password and back up the recovery secret offline.
+4. Choose Fund Testnet Account for an unactivated account.
+5. Confirm the XLM balance is loaded from Horizon.
+6. Use the public address or QR code to receive Testnet XLM.
+7. Use the send flow to review and locally sign a Testnet transaction.
+8. View activity and open completed transactions in a Testnet explorer.
 
-Redeploy the Vercel frontend after changing this variable. Never set this production variable to `localhost`.
+Friendbot funding is a developer/testing facility. Testnet assets are not real money.
 
-The backend Vercel project must have these values configured:
+## Soroban Contracts
 
-```env
-NODE_ENV=production
-# Vercel supplies PORT automatically; do not override it.
-FRONTEND_ORIGIN=https://afri-pay-beta.vercel.app
-STELLAR_NETWORK=testnet
-STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
-STELLAR_RPC_URL=https://soroban-testnet.stellar.org
-```
+| Contract | Purpose | Current status |
+|---|---|---|
+| gateway | Payment intents and authorized confirmation | Core logic implemented and unit-tested |
+| escrow | P2P escrow lifecycle | Core crate/tests present; broader deployment/e2e evidence pending |
+| multisig | Threshold approvals and asset transfer logic | Core crate/tests present; broader deployment/e2e evidence pending |
+| vault | Deposit, withdrawal, and yield logic | Core crate/tests present; broader deployment/e2e evidence pending |
 
-Set `DATABASE_URL` and any provider/API credentials required by the other AfriPay modules as Vercel environment variables. Do not commit them. Verify deployment before updating the frontend by opening `https://<actual-vercel-backend-url>/health`; it must return HTTP 200 and report the Testnet configuration.
-
-Useful local checks:
-
-```text
-GET  http://localhost:3101/health
-GET  http://localhost:3101/stellar/accounts/{PUBLIC_KEY}
-GET  http://localhost:3101/stellar/accounts/{PUBLIC_KEY}/history
-POST http://localhost:3101/stellar/accounts/{PUBLIC_KEY}/fund-testnet
-```
-
-Testnet funding uses Friendbot and accepts only the public Stellar address. It is development functionality and does not fund Mainnet accounts. The frontend favicon is served at `/icon.svg`.
-
-### Contracts
-
-```bash
-cd contracts
-cargo test
-cargo clippy --all-targets --all-features -- -D warnings
-```
-
-Requires a working Rust toolchain. CI runs these on Ubuntu.
-
----
-
-## Environment Variables
-
-See:
-
-- [`backend/.env.example`](backend/.env.example) — MTN MoMo, Redis, Stellar, exchange rates
-- [`frontend/.env.example`](frontend/.env.example) — public API URL, network label
-
-Never commit real secrets.
-
----
+Contract source and tests are in contracts/. Source presence must not be treated as proof of a production deployment.
 
 ## Testing
 
-Commands verified in this repository:
+    cd backend
+    npm test -- --runInBand
+    npm run lint
+    npm run build
 
-```bash
-# Backend
-cd backend && npm test
-cd backend && npm run lint
-cd backend && npm run build
+    cd ../frontend
+    npm test -- --runInBand
+    npm run lint
+    npm run build
 
-# Frontend
-cd frontend && npm test
-cd frontend && npm run lint
-cd frontend && npm run build
+    cd ../contracts
+    cargo test
+    cargo clippy --all-targets --all-features -- -D warnings
 
-# Contracts (requires Rust)
-cd contracts && cargo test
-cd contracts && cargo clippy --all-targets --all-features -- -D warnings
-```
+GitHub Actions runs backend, frontend, and contract checks on pushes to main and pull requests.
 
-CI runs backend lint + test, frontend lint + test, and contract test + clippy on every pull request.
+## Deployment
 
----
+The public frontend is deployed at https://afri-pay-beta.vercel.app/. The backend is deployed as a separate Vercel Node function at https://afripay-api-seven.vercel.app/.
 
-## Stellar Network
+The backend project uses backend/api/index.ts and backend/vercel.json. Configure FRONTEND_ORIGIN=https://afri-pay-beta.vercel.app and the Testnet Stellar URLs in the backend deployment. Configure NEXT_PUBLIC_API_URL=https://afripay-api-seven.vercel.app in the frontend Vercel Production environment, then redeploy the frontend.
 
-| Setting | Default |
-|---------|---------|
-| Network | **Stellar Testnet** |
-| Horizon | `https://horizon-testnet.stellar.org` |
-| Soroban RPC | `https://soroban-testnet.stellar.org` |
+## Project Status and Mainnet Position
 
-Configure via `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, and `STELLAR_RPC_URL` in backend `.env`. Mainnet is not configured or tested in this repo.
+AfriPay is an active MVP/testnet project. Native wallet creation, local encryption, Testnet funding, public-address receiving, balance retrieval, history retrieval, and supporting Stellar API routes are implemented. Payment-provider, persistence, Soroban application, and production-hardening work remains partial or planned.
 
-### Stellar Testnet deployment
+AfriPay is NOT Mainnet-ready. Before real funds are supported, the project needs independent security review, XSS/CSP review, browser-storage and recovery testing, dependency audit, transaction/reserve/fee validation, Soroban authorization review, mobile-browser testing, monitoring, and an incident-response plan.
 
-The following contracts are deployed and queryable on Stellar Testnet. These are development deployments, not production or mainnet contracts.
+## Documentation
 
-| Component | Contract ID | Explorer |
-|---|---|---|
-| Payment Gateway | `CB656MBZCHK5BMYUVNJQYAFIAWFNJZ2PASDYU7WCSVX34SUC6E5M3VCG` | [View](https://stellar.expert/explorer/testnet/contract/CB656MBZCHK5BMYUVNJQYAFIAWFNJZ2PASDYU7WCSVX34SUC6E5M3VCG) |
-| Escrow | `CCAL4FLLFKKCAT5NBFSDB7RH6GJYNBAPBJNIIJO5PZOEPHB23HXGCTCY` | [View](https://stellar.expert/explorer/testnet/contract/CCAL4FLLFKKCAT5NBFSDB7RH6GJYNBAPBJNIIJO5PZOEPHB23HXGCTCY) |
-| Multisig | `CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67` | [View](https://stellar.expert/explorer/testnet/contract/CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67) |
-| Savings Vault | `CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II` | [View](https://stellar.expert/explorer/testnet/contract/CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II) |
-
-Deployment transactions and live-payment evidence are tracked in [the Testnet deployment runbook](docs/STELLAR_TESTNET_DEPLOYMENT.md) and [the readiness report](PROJECT_READINESS_REPORT.md).
-
----
-
-## Payment Gateway Lifecycle
-
-On-chain payment intents (`contracts/gateway`):
-
-```text
-Created (Pending)
-  |
-  v
-Confirmed
-```
-
-Off-chain MTN MoMo transactions:
-
-```text
-PENDING
-  |
-  +---- FAILED
-  |
-  v
-SUCCESSFUL
-```
-
-Confirmation on-chain requires the authorized confirmer address. MoMo status is updated via API polling or webhook callback.
-
----
-
-## Security
-
-See [SECURITY.md](SECURITY.md) for vulnerability reporting, webhook verification, contract assumptions, and known limitations.
-
-**Important:** Application routes require `API_KEY` in production. Provider webhooks use their dedicated token guard. Rate limiting and centralized webhook replay protection remain before public deployment.
-
-Report vulnerabilities to **security@afripay.io** — do not open public issues for security bugs.
-
-## AfriPay Native Stellar Wallet
-
-AfriPay now includes a registration-free native Stellar Testnet wallet. Visitors can create or import a wallet, set a local password, back up the recovery secret, unlock and lock the wallet, view real XLM and asset balances, receive via public address/QR code, view on-chain history, and sign XLM payments locally.
-
-The wallet is non-custodial: the secret seed is generated/imported and encrypted in the browser with Web Crypto AES-GCM and PBKDF2. Only public keys and signed transaction XDR cross the AfriPay API boundary; private keys never go to the backend or PostgreSQL. Read [the wallet security model](docs/WALLET_SECURITY.md) and [implementation notes](docs/NATIVE_WALLET_IMPLEMENTATION.md) before using it.
-
----
+- docs/WALLET_SECURITY.md
+- docs/NATIVE_WALLET_IMPLEMENTATION.md
+- docs/STELLAR_TESTNET_DEPLOYMENT.md
+- docs/DEPENDENCY_AUDIT.md
+- docs/CONTRIBUTOR_BACKLOG.md
+- CONTRIBUTING.md
+- SECURITY.md
+- CODE_OF_CONDUCT.md
+- PROJECT_READINESS_REPORT.md
 
 ## Contributing
 
-We welcome contributions. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, workflow, and PR expectations.
+Read CONTRIBUTING.md. The normal workflow is:
 
-Also see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+    Fork → create a branch → implement → test → open a pull request
 
----
+Preserve the Testnet-only default, do not add private keys or credentials, and include regression tests for behavior changes.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE).
-
----
-
-## Contact
-
-- **GitHub Issues:** https://github.com/Afri-pay/AfriPay/issues
-- **Security:** security@afripay.io
-- **Discord:** https://discord.gg/wbTVX2dP9Y
-
----
-
-*Built for Africa. Technically honest about what works today and what comes next.*
+AfriPay is released under the MIT License. See LICENSE.
