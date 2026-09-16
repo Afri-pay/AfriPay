@@ -1,10 +1,8 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Networks, TransactionBuilder } from '@stellar/stellar-sdk';
-import { ApiKeyGuard } from '../auth/api-key.guard';
 import { StellarService } from './stellar.service';
 
 @Controller('stellar')
-@UseGuards(ApiKeyGuard)
 export class StellarController {
   constructor(private readonly stellar: StellarService) {}
 
