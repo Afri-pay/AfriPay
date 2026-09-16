@@ -217,30 +217,30 @@ FRONTEND_ORIGIN=https://afri-pay-beta.vercel.app
 
 The repository does not contain a deployed backend URL, so production funding cannot work until a backend is deployed and its public URL is supplied to Vercel.
 
-### Deploy the backend to Render
+### Deploy the backend without a credit card
 
-The repository includes [`render.yaml`](render.yaml), which defines the NestJS backend as a Render Web Service. In Render, choose **New → Blueprint**, connect this repository, and deploy the blueprint from the `main` branch. Render will build from `backend/`, run `npm ci && npm run build`, start with `npm run start`, and use `/health` for health checks.
+Render may require payment verification even for a free Blueprint. If you do not have a card, deploy the backend as a second Vercel project instead. The repository includes `backend/server.ts`, a Vercel-compatible Node/Nest entry point. Vercel documents zero-configuration Node/NestJS backend deployment [here](https://vercel.com/docs/frameworks/backend).
 
-After Render creates the service, copy its actual public URL (for example, the URL shown in the Render service dashboard) into the Vercel project environment:
+In Vercel, choose **Add New → Project**, import `Afri-pay/AfriPay`, and set the project **Root Directory** to `backend`. Use the backend project’s generated public URL in the frontend project:
 
 ```env
-NEXT_PUBLIC_API_URL=https://<actual-render-service-url>
+NEXT_PUBLIC_API_URL=https://<actual-vercel-backend-url>
 ```
 
 Redeploy the Vercel frontend after changing this variable. Never set this production variable to `localhost`.
 
-The Render service must have these values configured:
+The backend Vercel project must have these values configured:
 
 ```env
 NODE_ENV=production
-PORT=3101
+# Vercel supplies PORT automatically; do not override it.
 FRONTEND_ORIGIN=https://afri-pay-beta.vercel.app
 STELLAR_NETWORK=testnet
 STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
 STELLAR_RPC_URL=https://soroban-testnet.stellar.org
 ```
 
-Set `DATABASE_URL` and any provider/API credentials required by the other AfriPay modules as Render secret environment variables. Do not commit them. Verify deployment before updating Vercel by opening `https://<actual-render-service-url>/health`; it must return HTTP 200 and report the Testnet configuration.
+Set `DATABASE_URL` and any provider/API credentials required by the other AfriPay modules as Vercel environment variables. Do not commit them. Verify deployment before updating the frontend by opening `https://<actual-vercel-backend-url>/health`; it must return HTTP 200 and report the Testnet configuration.
 
 Useful local checks:
 
