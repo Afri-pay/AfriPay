@@ -287,6 +287,12 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, webhook verification
 
 Report vulnerabilities to **security@afripay.io** — do not open public issues for security bugs.
 
+## AfriPay Native Stellar Wallet
+
+AfriPay now includes a registration-free native Stellar Testnet wallet. Visitors can create or import a wallet, set a local password, back up the recovery secret, unlock and lock the wallet, view the real XLM balance, receive via public address/QR code, and sign XLM payments locally without Freighter. Freighter remains an optional external-wallet integration.
+
+The wallet is non-custodial: the secret seed is generated/imported and encrypted in the browser with Web Crypto AES-GCM and PBKDF2. Only public keys and signed transaction XDR cross the AfriPay API boundary; private keys never go to the backend or PostgreSQL. Read [the wallet security model](docs/WALLET_SECURITY.md) and [implementation notes](docs/NATIVE_WALLET_IMPLEMENTATION.md) before using it.
+
 ---
 
 ## Contributing

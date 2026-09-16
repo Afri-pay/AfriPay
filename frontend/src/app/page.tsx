@@ -1,6 +1,7 @@
 import { WalletConnect } from '@/components/Wallet/WalletConnect';
 import { PaymentDashboard } from '@/components/Payments/PaymentDashboard';
 import { ReceivePayment } from '@/components/Payments/ReceivePayment';
+import { NativeWallet } from '@/components/Wallet/NativeWallet';
 
 export default function HomePage() {
   return (
@@ -34,12 +35,13 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <WalletConnect />
-        </div>
-        <PaymentDashboard />
-        <div className="mt-6">
-          <ReceivePayment />
+        <NativeWallet />
+        <div className="mt-8 rounded-lg border border-dashed bg-white p-5">
+          <p className="text-xs font-bold uppercase tracking-[.16em] text-[#0a5c4a]">Already use a Stellar wallet?</p>
+          <p className="mt-1 text-sm text-slate-600">Freighter remains available as an optional external-wallet integration.</p>
+          <div className="mt-4"><WalletConnect /></div>
+          <div className="mt-5"><PaymentDashboard /></div>
+          <div className="mt-5"><ReceivePayment /></div>
         </div>
       </div>
     </main>

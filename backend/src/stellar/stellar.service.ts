@@ -1,11 +1,27 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { Asset, Horizon, Networks, Operation, TransactionBuilder } from '@stellar/stellar-sdk';
+import { Asset, Horizon, Networks, Operation, TransactionBuilder, Keypair, StrKey } from '@stellar/stellar-sdk';
 
 @Injectable()
 export class StellarService {
   private readonly horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
   private readonly network = process.env.STELLAR_NETWORK || 'testnet';
   private readonly server = new Horizon.Server(this.horizonUrl);
+
+  async loadAccount(publicKey: string) {
+    if (!StrKey.isValidEd25519PublicKey(publicKey)) throw new BadRequestException('Invalid Stellar public key');
+    try { return await this.server.loadAccount(publicKey); }
+    catch (error) { throw new ServiceUnavailableException(`Unable to load Stellar account: ${error instanceof Error ? error.message : 'network error'}`); }
+  }
+
+  async fundTestnet(publicKey: string) {
+    this.assertTestnet();
+    if (!StrKey.isValidEd25519PublicKey(publicKey)) throw new BadRequestException('Invalid Stellar public key');
+    try {
+      const response = await fetch(`https://friendbot.stellar.org?addr=${encodeURIComponent(publicKey)}`);
+      if (!response.ok) throw new Error(`Friendbot returned ${response.status}`);
+      return { status: 'funded', network: 'testnet' };
+    } catch (error) { throw new ServiceUnavailableException(`Testnet funding failed: ${error instanceof Error ? error.message : 'network error'}`); }
+  }
 
   async buildNativePayment(sender: string, recipient: string, amount: string): Promise<{ xdr: string; network: string }> {
     this.assertTestnet();
