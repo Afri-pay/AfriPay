@@ -20,5 +20,9 @@ describe('HealthController', () => {
     const result = controller.check();
     expect(result.status).toBe('ok');
     expect(result.service).toBe('afripay-backend');
+    expect(result.port).toBe(3101);
+    expect(result.stellar.network).toBe('testnet');
+    expect(result.stellar.horizon.availability).toBe('configured');
+    expect(result.stellar.sorobanRpc.availability).toBe('configured');
   });
 });

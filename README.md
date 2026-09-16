@@ -202,6 +202,46 @@ The frontend API URL defaults to `http://localhost:3101` and can be overridden i
 NEXT_PUBLIC_API_URL=http://localhost:3101
 ```
 
+For the deployed frontend, configure the Vercel environment variable with the public backend URL. Do not use `localhost` in production:
+
+```env
+NEXT_PUBLIC_API_URL=https://PUBLIC_BACKEND_URL
+```
+
+Configure the backend deployment with:
+
+```env
+PORT=3101
+FRONTEND_ORIGIN=https://afri-pay-beta.vercel.app
+```
+
+The repository does not contain a deployed backend URL, so production funding cannot work until a backend is deployed and its public URL is supplied to Vercel.
+
+### Deploy the backend to Render
+
+The repository includes [`render.yaml`](render.yaml), which defines the NestJS backend as a Render Web Service. In Render, choose **New → Blueprint**, connect this repository, and deploy the blueprint from the `main` branch. Render will build from `backend/`, run `npm ci && npm run build`, start with `npm run start`, and use `/health` for health checks.
+
+After Render creates the service, copy its actual public URL (for example, the URL shown in the Render service dashboard) into the Vercel project environment:
+
+```env
+NEXT_PUBLIC_API_URL=https://<actual-render-service-url>
+```
+
+Redeploy the Vercel frontend after changing this variable. Never set this production variable to `localhost`.
+
+The Render service must have these values configured:
+
+```env
+NODE_ENV=production
+PORT=3101
+FRONTEND_ORIGIN=https://afri-pay-beta.vercel.app
+STELLAR_NETWORK=testnet
+STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
+STELLAR_RPC_URL=https://soroban-testnet.stellar.org
+```
+
+Set `DATABASE_URL` and any provider/API credentials required by the other AfriPay modules as Render secret environment variables. Do not commit them. Verify deployment before updating Vercel by opening `https://<actual-render-service-url>/health`; it must return HTTP 200 and report the Testnet configuration.
+
 Useful local checks:
 
 ```text

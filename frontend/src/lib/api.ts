@@ -1,7 +1,9 @@
 export const LOCAL_API_URL = 'http://localhost:3101';
 
-export function getApiUrl(value = process.env.NEXT_PUBLIC_API_URL) {
+export function getApiUrl(value = process.env.NEXT_PUBLIC_API_URL, environment = process.env.NODE_ENV) {
+  if (!value?.trim() && environment === 'production') throw new Error('Production API URL is not configured. Set NEXT_PUBLIC_API_URL in Vercel.');
   const candidate = (value?.trim() || LOCAL_API_URL).replace(/\/+$/, '');
+  if (environment === 'production' && /^https?:\/\/localhost(?::\d+)?$/i.test(candidate)) throw new Error('Production API URL cannot point to localhost.');
   try {
     const url = new URL(candidate);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('Unsupported API protocol');
@@ -12,13 +14,16 @@ export function getApiUrl(value = process.env.NEXT_PUBLIC_API_URL) {
 }
 
 export class ApiError extends Error {
-  constructor(message: string, readonly kind: 'unavailable' | 'authentication' | 'not-found' | 'cors' | 'server', readonly status?: number) { super(message); }
+  constructor(message: string, readonly kind: 'configuration' | 'unavailable' | 'authentication' | 'not-found' | 'cors' | 'server', readonly status?: number) { super(message); }
 }
 
 export async function apiFetch(path: string, init?: RequestInit) {
+  let baseUrl: string;
+  try { baseUrl = getApiUrl(); } catch (error) { throw new ApiError(error instanceof Error ? error.message : 'Production API URL is not configured.', 'configuration'); }
   let response: Response;
-  try { response = await fetch(`${getApiUrl()}${path.startsWith('/') ? path : `/${path}`}`, init); }
-  catch { throw new ApiError('Backend unavailable. Start the AfriPay backend on port 3101.', 'unavailable'); }
+  const crossOrigin = typeof window !== 'undefined' && new URL(baseUrl).origin !== window.location.origin;
+  try { response = await fetch(`${baseUrl}${path.startsWith('/') ? path : `/${path}`}`, init); }
+  catch { throw new ApiError(crossOrigin ? 'Backend unavailable or CORS is blocking the production API. Verify NEXT_PUBLIC_API_URL and FRONTEND_ORIGIN.' : 'Backend unavailable. Start the AfriPay backend on port 3101.', crossOrigin ? 'cors' : 'unavailable'); }
   if (response.ok) return response;
   if (response.status === 401 || response.status === 403) throw new ApiError('API authentication failed. Check the configured API key.', 'authentication', response.status);
   if (response.status === 404) throw new ApiError('The requested AfriPay API route was not found.', 'not-found', response.status);
