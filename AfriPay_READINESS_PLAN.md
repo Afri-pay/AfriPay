@@ -4,7 +4,7 @@ Repository: https://github.com/Afri-pay/AfriPay
 
 ## Objective
 
-Prepare AfriPay for external review submission by bringing the repository to a professional open-source standard comparable to projects that have successfully received external review funding/payments.
+Prepare AfriPay for external review by bringing the repository to a professional open-source standard suitable for independent technical assessment and community contribution.
 
 The goal is **not** to game external review, fabricate activity, or guarantee payment. The goal is to make the project genuinely strong, technically credible, easy for maintainers/reviewers to evaluate, and aligned with observed external review OSS contribution practices.
 
@@ -738,7 +738,7 @@ Do not merely give recommendations. Work directly on the repository and implemen
 
 ## Primary objective
 
-Make AfriPay a high-quality, credible open-source Stellar/Soroban project that is genuinely ready for external contributors and external review review.
+Make AfriPay a high-quality, credible open-source Stellar/Soroban project that is genuinely ready for external contributors and independent technical review.
 
 Do NOT attempt to game external review.
 

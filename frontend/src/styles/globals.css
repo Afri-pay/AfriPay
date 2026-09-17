@@ -73,3 +73,127 @@ select:focus-visible {
   outline: 3px solid rgba(242, 169, 0, 0.55);
   outline-offset: 2px;
 }
+
+/* Premium wallet workspace */
+.afri-shell { --afri-ink: #102a2a; --afri-muted: #6a7d79; --afri-line: #dce9e4; --afri-panel: #fff; --afri-soft: #eef7f3; background: #f6faf8; color: var(--afri-ink); }
+.dark .afri-shell { --afri-ink: #f1faf6; --afri-muted: #9bb2aa; --afri-line: #24453f; --afri-panel: #0f2322; --afri-soft: #14332f; background: #071917; }
+.afri-topbar { height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(18px, 3vw, 42px); color: #fff; background: linear-gradient(105deg, #075b4b, #00624f 65%, #075344); border-bottom: 1px solid rgba(255,255,255,.12); }
+.brand-mark { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: #f5bd08; color: #15504a; font-size: 22px; font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.afri-top-actions { display: flex; align-items: center; gap: 14px; }
+.afri-network { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(61,223,177,.32); border-radius: 999px; padding: 7px 12px; color: #e7fff6; background: rgba(0,45,36,.25); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.afri-network span { width: 8px; height: 8px; border-radius: 50%; background: #51dfad; box-shadow: 0 0 0 3px rgba(81,223,173,.12); }
+.afri-topbar .icon-button { width: 34px; height: 34px; border-color: rgba(255,255,255,.5); color: #fff; background: transparent; }
+.afri-icon-action, .afri-profile { position: relative; border: 0; color: #fff; background: transparent; }
+.afri-icon-action { font-size: 25px; transform: rotate(180deg); }
+.afri-icon-action i { position: absolute; top: 1px; right: 0; width: 7px; height: 7px; border-radius: 50%; background: #ff6458; }
+.afri-profile { display: flex; align-items: center; gap: 10px; border-radius: 50%; font-weight: 700; }
+.afri-profile::first-letter { display: block; padding: 9px 11px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.afri-layout { display: flex; min-height: calc(100vh - 68px); }
+.afri-sidebar { position: relative; display: flex; width: 176px; flex-shrink: 0; flex-direction: column; border-right: 1px solid var(--afri-line); background: var(--afri-panel); padding: 17px 12px; }
+.afri-nav-item { display: flex; width: 100%; align-items: center; gap: 12px; border: 0; border-radius: 8px; padding: 10px 12px; color: var(--afri-ink); background: transparent; font-size: 12px; font-weight: 600; text-align: left; transition: .18s ease; }
+.afri-nav-item:hover, .afri-nav-item.active { color: #075b4b; background: #dff3ec; }
+.dark .afri-nav-item:hover, .dark .afri-nav-item.active { color: #e5fff5; background: #075b4b; }
+.afri-faucet { margin-top: 32px; border-radius: 12px; padding: 13px 12px; background: var(--afri-soft); }
+.afri-faucet-title { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; }
+.afri-faucet-title span { color: #e8aa00; font-size: 18px; }
+.afri-faucet p { margin: 7px 0 12px; color: var(--afri-muted); font-size: 10px; }
+.afri-faucet button { width: 100%; border: 0; border-radius: 8px; padding: 9px 5px; color: #fff; background: #087f68; font-size: 10px; font-weight: 800; }
+.afri-sidebar-footer { position: absolute; bottom: 24px; left: 20px; color: var(--afri-muted); font-size: 10px; line-height: 2.2; }
+.afri-content { min-width: 0; flex: 1; padding: 26px clamp(18px, 3.5vw, 42px) 46px; }
+.afri-content-inner { width: 100%; max-width: 990px; margin: 0 auto; }
+.afri-welcome { display: flex; align-items: center; justify-content: space-between; gap: 22px; margin-bottom: 24px; }
+.afri-eyebrow { margin: 0 0 7px; color: #087f68; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.afri-welcome h1 { margin: 0; color: var(--afri-ink); font-size: clamp(23px, 3vw, 32px); font-weight: 800; letter-spacing: -.04em; }
+.afri-welcome > div:first-child > p:last-child { margin: 6px 0 0; color: var(--afri-muted); font-size: 12px; line-height: 1.6; }
+.afri-environment { display: flex; align-items: center; gap: 11px; min-width: 196px; border: 1px solid var(--afri-line); border-radius: 11px; padding: 12px 14px; background: var(--afri-panel); }
+.afri-cube { color: #119b7b; font-size: 26px; }
+.afri-environment strong, .afri-environment small { display: block; }
+.afri-environment strong { font-size: 10px; }
+.afri-environment small { margin-top: 5px; color: var(--afri-muted); font-size: 8px; }
+.afri-wallet-dashboard { min-width: 0; }
+.afri-wallet-hero { position: relative; min-height: 164px; overflow: hidden; border-radius: 11px; padding: 25px 20px; color: #f2fffb; background: linear-gradient(120deg, #087861 0%, #006450 55%, #003d36 100%); box-shadow: 0 12px 24px rgba(2,83,66,.18); }
+.afri-wallet-hero::after { position: absolute; right: 0; bottom: -60px; width: 57%; height: 160px; border-radius: 60% 0 0; background: linear-gradient(135deg, transparent, rgba(3,53,47,.28)); content: ''; transform: rotate(-7deg); }
+.afri-hero-copy { position: relative; z-index: 2; }
+.afri-card-title { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.afri-card-title span { opacity: .8; font-size: 12px; }
+.afri-wallet-hero h2 { margin: 12px 0 4px; color: #fff; font-size: clamp(27px, 4vw, 35px); line-height: 1; letter-spacing: -.04em; }
+.afri-wallet-id, .afri-funded { margin: 0; color: #bbede0; font-size: 10px; }
+.afri-wallet-id button { border: 0; color: inherit; background: transparent; }
+.afri-funded { margin-top: 13px; color: #d4fff2; }
+.afri-funded:first-letter { color: #22d99d; }
+.afri-hero-network { position: absolute; z-index: 3; top: 14px; right: 72px; padding: 6px 10px; font-size: 9px; }
+.afri-africa-mark { position: absolute; z-index: 2; right: 22px; bottom: 10px; width: 91px; height: 105px; opacity: .5; background-image: radial-gradient(#f5c51a 1px, transparent 1.4px); background-size: 6px 6px; clip-path: polygon(45% 0, 67% 10%, 77% 25%, 91% 31%, 84% 47%, 89% 61%, 75% 68%, 67% 86%, 49% 100%, 39% 84%, 28% 72%, 15% 54%, 22% 38%, 8% 26%, 26% 20%, 29% 7%); }
+.afri-quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 17px; }
+.afri-quick-actions button { min-height: 42px; border: 1px solid var(--afri-line); border-radius: 9px; color: var(--afri-ink); background: var(--afri-panel); font-size: 11px; font-weight: 800; transition: .18s ease; }
+.afri-quick-actions button:first-child { border-color: #087f68; color: #fff; background: #087f68; }
+.afri-quick-actions button:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(8,127,104,.16); }
+.afri-quick-actions button span { margin-right: 7px; color: #087f68; }
+.afri-quick-actions button:first-child span { color: #fff; }
+.afri-card, .afri-address-card { border: 1px solid var(--afri-line); border-radius: 11px; background: var(--afri-panel); box-shadow: 0 8px 22px rgba(16,42,42,.03); }
+.afri-address-card { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 18px; }
+.afri-address-card h3, .afri-section-heading h3 { margin: 0; color: var(--afri-ink); font-size: 13px; }
+.afri-address-card h3 button { border: 0; color: #087f68; background: transparent; }
+.afri-address-card p { max-width: 600px; margin: 8px 0 5px; overflow: hidden; color: var(--afri-muted); font-family: monospace; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.afri-address-card small { color: var(--afri-muted); font-size: 9px; }
+.afri-dashboard-qr, .afri-qr-placeholder { flex: 0 0 auto; width: 80px; height: 80px; border-radius: 8px; object-fit: cover; }
+.afri-qr-placeholder { display: grid; place-items: center; border: 1px solid var(--afri-line); color: var(--afri-muted); font-size: 10px; }
+.afri-dashboard-grid { display: grid; grid-template-columns: 1.65fr .9fr; gap: 10px; margin-top: 16px; }
+.afri-assets-card, .afri-promo-card { min-height: 145px; padding: 15px 17px; }
+.afri-section-heading { display: flex; align-items: center; justify-content: space-between; }
+.afri-section-heading button { border: 0; color: #087f68; background: transparent; font-size: 10px; font-weight: 800; }
+.afri-asset-row { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 10px; border-top: 1px solid var(--afri-line); margin-top: 9px; padding-top: 9px; }
+.afri-asset-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: #fff; background: #080b0b; font-size: 15px; }
+.afri-asset-icon.usdc { background: #2778d3; font-weight: 800; }
+.afri-asset-row b, .afri-asset-row small, .afri-asset-row strong, .afri-activity-row b, .afri-activity-row small { display: block; }
+.afri-asset-row b { color: var(--afri-ink); font-size: 11px; }
+.afri-asset-row small { margin-top: 3px; color: var(--afri-muted); font-size: 9px; font-weight: 400; }
+.afri-asset-row strong { color: var(--afri-ink); font-size: 11px; text-align: right; }
+.afri-promo-card { display: flex; justify-content: space-between; overflow: hidden; color: #effff8; background: linear-gradient(135deg, #eaf7f2, #d7efe5); }
+.dark .afri-promo-card { background: linear-gradient(135deg, #0d473d, #062e29); }
+.afri-promo-card h3 { margin: 0; color: #075b4b; font-size: 14px; line-height: 1.25; }
+.dark .afri-promo-card h3 { color: #effff8; }
+.afri-promo-card p { color: #526f68; font-size: 10px; line-height: 1.7; }
+.dark .afri-promo-card p { color: #b8d7ce; }
+.afri-promo-africa { align-self: center; color: #008872; font-size: 65px; opacity: .75; transform: rotate(25deg); }
+.afri-activity-card { margin-top: 16px; padding: 15px 17px; }
+.afri-activity-row { display: grid; grid-template-columns: 32px 1fr auto auto 15px; align-items: center; gap: 9px; border-top: 1px solid var(--afri-line); margin-top: 9px; padding-top: 9px; }
+.afri-activity-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #087f68; background: #daf5eb; }
+.afri-activity-row b { color: var(--afri-ink); font-size: 10px; }
+.afri-activity-row small { margin-top: 3px; color: var(--afri-muted); font-size: 8px; }
+.afri-activity-row strong { color: var(--afri-ink); font-size: 10px; text-align: right; }
+.afri-activity-status { border-radius: 999px; padding: 4px 8px; color: #087f68; background: #d2f5e8; font-size: 8px; font-weight: 800; }
+.afri-activity-row a { color: #087f68; font-size: 14px; }
+.afri-empty, .afri-status-message { color: var(--afri-muted); font-size: 11px; }
+.afri-footer-promo { display: flex; align-items: center; gap: 12px; margin-top: 15px; border: 1px solid var(--afri-line); border-radius: 11px; padding: 12px 17px; background: var(--afri-panel); }
+.afri-footer-promo > span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; color: #193f37; background: #f5bd08; }
+.afri-footer-promo b, .afri-footer-promo small { display: block; }
+.afri-footer-promo b { color: var(--afri-ink); font-size: 10px; }
+.afri-footer-promo small { margin-top: 4px; color: var(--afri-muted); font-size: 9px; }
+.afri-footer-promo strong { margin-left: auto; color: #087f68; font-family: cursive; font-size: 17px; }
+.afri-remove-wallet { margin-top: 15px; border: 0; color: #a33b3b; background: transparent; font-size: 10px; text-decoration: underline; }
+.afri-funding-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; border: 1px solid #f0d48a; border-radius: 9px; padding: 10px 13px; color: #765700; background: #fff7d9; font-size: 11px; }
+.afri-funding-row p { margin: 0; }
+.afri-funding-row button, .afri-primary-btn { border: 0; border-radius: 8px; padding: 10px 14px; color: #fff; background: #087f68; font-weight: 800; }
+.afri-funding-row button:disabled, .afri-primary-btn:disabled { cursor: not-allowed; opacity: .55; }
+.afri-api-warning { border: 1px solid #f0d48a; border-radius: 8px; padding: 10px; color: #765700; background: #fff7d9; font-size: 11px; }
+.afri-onboarding, .afri-form, .afri-backup, .afri-receive { max-width: 620px; margin: 0 auto; padding: 30px; }
+.afri-onboarding h2, .afri-form h2, .afri-backup h2, .afri-receive h2 { margin: 0; color: var(--afri-ink); font-size: 25px; }
+.afri-onboarding > p:not(.afri-eyebrow), .afri-form > p, .afri-backup > p, .afri-receive > p { color: var(--afri-muted); font-size: 12px; line-height: 1.6; }
+.afri-onboarding-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+.afri-secondary-btn, .afri-back-btn { border: 1px solid var(--afri-line); border-radius: 8px; padding: 10px 14px; color: #087f68; background: var(--afri-panel); font-weight: 800; }
+.afri-form { display: grid; gap: 12px; }
+.afri-form input, .afri-form textarea { width: 100%; border: 1px solid var(--afri-line); border-radius: 8px; padding: 11px 12px; color: var(--afri-ink); background: var(--afri-panel); font-size: 12px; }
+.afri-form textarea { min-height: 90px; font-family: monospace; }
+.afri-form small, .afri-form p { color: var(--afri-muted); font-size: 10px; }
+.afri-error { color: #b13b3b !important; }
+.afri-backup { border-color: #f0d48a; background: #fff9e6; }
+.afri-backup h2, .afri-backup p, .afri-backup label { color: #604b0d; }
+.afri-backup code { display: block; margin: 14px 0; overflow-wrap: anywhere; border-radius: 8px; padding: 14px; color: #1f2c25; background: #fff; font-size: 12px; }
+.afri-backup label { display: flex; gap: 8px; align-items: flex-start; font-size: 11px; }
+.afri-backup button { display: block; margin-top: 18px; }
+.afri-receive { display: grid; gap: 12px; }
+.afri-address-full, .afri-link-result { overflow-wrap: anywhere; font-family: monospace; }
+.afri-qr { margin: 8px auto; }
+.afri-mobile-nav { display: none; }
+@media (max-width: 900px) { .afri-sidebar { width: 160px; } .afri-welcome { align-items: flex-start; flex-direction: column; } .afri-environment { width: 100%; } }
+@media (max-width: 680px) { .afri-topbar { height: 62px; padding: 0 14px; } .afri-topbar .text-\[17px\] { font-size: 15px; } .afri-topbar .text-\[11px\] { display: none; } .afri-top-actions { gap: 7px; } .afri-top-actions .afri-network { padding: 6px 8px; font-size: 9px; } .afri-icon-action { display: none; } .afri-layout { min-height: calc(100vh - 62px); } .afri-sidebar { display: none; } .afri-content { padding: 19px 12px 82px; } .afri-welcome { margin-bottom: 17px; } .afri-welcome h1 { font-size: 25px; } .afri-quick-actions { grid-template-columns: repeat(2, 1fr); } .afri-dashboard-grid { grid-template-columns: 1fr; } .afri-promo-card { min-height: 120px; } .afri-activity-row { grid-template-columns: 28px 1fr auto; } .afri-activity-status { display: none; } .afri-activity-row strong { grid-column: 2; text-align: left; } .afri-activity-row a { grid-column: 3; grid-row: 1 / span 2; } .afri-footer-promo strong { display: none; } .afri-mobile-nav { position: fixed; z-index: 20; right: 0; bottom: 0; left: 0; display: flex; border-top: 1px solid var(--afri-line); padding: 5px 4px; background: color-mix(in srgb, var(--afri-panel) 94%, transparent); backdrop-filter: blur(12px); } .afri-nav-item.mobile { width: 20%; flex-direction: column; justify-content: center; gap: 3px; padding: 7px 2px; font-size: 9px; text-align: center; } .afri-hero-network { right: 14px; } .afri-africa-mark { right: 8px; opacity: .3; } .afri-address-card p { max-width: calc(100vw - 130px); } .afri-onboarding, .afri-form, .afri-backup, .afri-receive { padding: 22px 17px; } }

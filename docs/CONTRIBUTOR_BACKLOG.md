@@ -40,7 +40,7 @@ This backlog contains legitimate work remaining after the readiness implementati
 
 ## 3. Complete MoMo-Backed USSD Send Money
 
-**Problem/context:** USSD session validation and persistence exist, but a completed session does not yet call a real MoMo collection adapter.
+**Problem/context:** USSD session validation exists in an in-memory session map, but durable payment state and a completed-session call to a real MoMo collection adapter are not implemented.
 
 **Technical scope:** Add an explicit adapter, traceable idempotent external ID, provider-state mapping, and safe `CON`/`END` responses.
 

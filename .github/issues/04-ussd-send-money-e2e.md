@@ -1,10 +1,10 @@
 ## Summary
 
-Connect the persisted USSD send-money state machine to a real MoMo collection adapter.
+Connect the existing in-memory USSD send-money session state machine to a real MoMo collection adapter and durable payment state.
 
 ## Current behavior
 
-USSD sessions validate menu input, recipient, amount, expiry, and replay behavior. The flow does not yet initiate a real MoMo request-to-pay operation or expose a provider-backed pending/success/failure response.
+USSD sessions currently live in an in-memory map and validate menu input, recipient, amount, expiry, and replay behavior. The flow does not yet persist payment state, initiate a real MoMo request-to-pay operation, or expose a provider-backed pending/success/failure response.
 
 ## Technical scope
 
