@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-type IconName = 'wallet' | 'send' | 'receive' | 'assets' | 'activity' | 'link' | 'settings' | 'copy' | 'qr' | 'lock' | 'sun' | 'moon' | 'system' | 'more' | 'external' | 'check' | 'faucet' | 'menu';
+type IconName = 'wallet' | 'send' | 'receive' | 'assets' | 'activity' | 'link' | 'settings' | 'copy' | 'qr' | 'lock' | 'sun' | 'moon' | 'system' | 'more' | 'external' | 'check' | 'faucet' | 'menu' | 'bell';
 
 export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, ReactNode> = {
@@ -22,6 +22,7 @@ export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
     check: <path d="m5 12 4 4L19 6" />,
     faucet: <><path d="M4 10h12a4 4 0 0 1 4 4v1" /><path d="M8 10V6h8v4M5 6h14" /><path d="M20 19v.01" /></>,
     menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
+    bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></>,
   };
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 }
