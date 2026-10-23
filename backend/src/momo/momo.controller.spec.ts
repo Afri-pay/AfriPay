@@ -55,6 +55,11 @@ describe('MomoController', () => {
     expect(result).toEqual({ referenceId: 'ref-1', status: 'PENDING' });
   });
 
+  it.each([{ amount: '-1' }, { amount: 'Infinity' }, { currency: 'NGN' }, { payerMsisdn: 'invalid' }])('rejects invalid sandbox payment details %j', async (patch) => {
+    await expect(controller.requestToPay({ amount: '1', currency: 'EUR', externalId: 'test', payerMsisdn: '2348012345678', ...patch })).rejects.toThrow(BadRequestException);
+    expect(service.requestToPay).not.toHaveBeenCalled();
+  });
+
   it('rejects a disbursement request missing required fields', async () => {
     await expect(
       controller.transfer({

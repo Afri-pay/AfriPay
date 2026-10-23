@@ -1,12 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { Asset, Horizon, Networks, Operation, TransactionBuilder, StrKey, rpc, Memo } from '@stellar/stellar-sdk';
+import { Asset, Config, Horizon, Networks, Operation, TransactionBuilder, StrKey, rpc, Memo } from '@stellar/stellar-sdk';
+import { NativePayment, parsePayment, stroops, validatePayment } from './payment-validation';
 
 @Injectable()
 export class StellarService {
-  private readonly horizonUrl = process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org';
+  private readonly horizonUrl = 'https://horizon-testnet.stellar.org';
   private readonly network = process.env.STELLAR_NETWORK || 'testnet';
   private readonly server = new Horizon.Server(this.horizonUrl);
-  private readonly soroban = new rpc.Server(process.env.STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org');
+  private readonly soroban = new rpc.Server('https://soroban-testnet.stellar.org', { timeout: 15000 });
+
+  constructor() { Config.setTimeout(15000); }
 
   private assetName(value: { asset_type?: string; asset_code?: string; asset_issuer?: string }) {
     if (value.asset_type === 'native') return 'XLM';
@@ -45,6 +48,7 @@ export class StellarService {
   }
 
   async loadAccount(publicKey: string) {
+    this.assertTestnet();
     if (!StrKey.isValidEd25519PublicKey(publicKey)) throw new BadRequestException('Invalid Stellar public key');
     try { return await this.server.loadAccount(publicKey); }
     catch (error) { if ((error as { response?: { status?: number } })?.response?.status === 404) throw new NotFoundException('Stellar account is not activated'); throw new ServiceUnavailableException(`Unable to load Stellar account: ${error instanceof Error ? error.message : 'network error'}`); }
@@ -68,6 +72,7 @@ export class StellarService {
   }
 
   async getHistory(publicKey: string) {
+    this.assertTestnet();
     if (!StrKey.isValidEd25519PublicKey(publicKey)) throw new BadRequestException('Invalid Stellar public key');
     try {
       const page = await this.server.payments().forAccount(publicKey).limit(50).order('desc').call();
@@ -91,52 +96,63 @@ export class StellarService {
     this.assertTestnet();
     if (!StrKey.isValidEd25519PublicKey(publicKey)) throw new BadRequestException('Invalid Stellar public key');
     try {
-      const response = await fetch(`https://friendbot.stellar.org?addr=${encodeURIComponent(publicKey)}`);
+      const response = await fetch(`https://friendbot.stellar.org?addr=${encodeURIComponent(publicKey)}`, { signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error(`Friendbot returned ${response.status}`);
       return { status: 'funded', network: 'testnet' };
     } catch (error) { throw new ServiceUnavailableException(`Testnet funding failed: ${error instanceof Error ? error.message : 'network error'}`); }
   }
 
-  async buildNativePayment(sender: string, recipient: string, amount: string, memo?: string): Promise<{ xdr: string; network: string }> {
+  async buildNativePayment(sender: string, recipient: string, amount: string, memo?: string): Promise<{ xdr: string; network: string; fee: string }> {
     this.assertTestnet();
-    if (!/^G[A-Z2-7]{55}$/.test(sender) || !/^G[A-Z2-7]{55}$/.test(recipient)) {
-      throw new BadRequestException('sender and recipient must be valid Stellar public keys');
-    }
-    if (!/^\d+(\.\d{1,7})?$/.test(amount) || Number(amount) <= 0) {
-      throw new BadRequestException('amount must be a positive decimal with at most 7 places');
-    }
+    validatePayment({ sender, recipient, amount, memo, asset: 'XLM' });
     try {
-      const account = await this.server.loadAccount(sender);
+      const [account, accountDetails, , ledgerPage, feeStats] = await Promise.all([
+        this.server.loadAccount(sender), this.server.accounts().accountId(sender).call(), this.server.loadAccount(recipient),
+        this.server.ledgers().order('desc').limit(1).call(), this.server.feeStats(),
+      ]);
+      const fee = String(Math.max(100, Number(feeStats.fee_charged.p95)));
+      if (!/^\d+$/.test(fee) || BigInt(fee) > BigInt(1000000)) throw new BadRequestException('Network fee exceeds wallet limit; try later');
+      const units = 2 + account.subentry_count + (accountDetails.num_sponsoring ?? 0) - (accountDetails.num_sponsored ?? 0);
+      const reserve = BigInt(ledgerPage.records[0].base_reserve_in_stroops) * BigInt(units);
+      const native = account.balances.find((item) => item.asset_type === 'native');
+      if (!native || stroops(native.balance) - stroops(native.selling_liabilities ?? '0') - reserve - BigInt(fee) < stroops(amount)) throw new BadRequestException('Insufficient spendable XLM after reserve, liabilities and fee');
       let builder = new TransactionBuilder(account, {
-        fee: '100',
+        fee,
         networkPassphrase: Networks.TESTNET,
       })
         .addOperation(Operation.payment({ destination: recipient, asset: Asset.native(), amount }));
-      if (memo?.trim()) {
-        if (memo.length > 28) throw new BadRequestException('memo must be 28 characters or fewer');
+      if (memo) {
         builder = builder.addMemo(Memo.text(memo));
       }
       const transaction = builder.setTimeout(300).build();
-      return { xdr: transaction.toXDR(), network: 'testnet' };
+      return { xdr: transaction.toXDR(), network: 'testnet', fee };
     } catch (error) {
-      throw new ServiceUnavailableException(`Unable to prepare Stellar transaction: ${error}`);
+      if (error instanceof BadRequestException) throw error;
+      if ((error as { response?: { status?: number } }).response?.status === 404) throw new BadRequestException('Sender and destination must be activated on Testnet');
+      throw new ServiceUnavailableException('Unable to prepare Stellar transaction; retry when Horizon is available');
     }
   }
 
-  async submitSignedTransaction(signedXdr: string, expectedPublicKey?: string): Promise<{ hash: string; explorerUrl: string }> {
+  async submitSignedTransaction(signedXdr: string, expectedPublicKey?: string, expected?: NativePayment): Promise<{ hash: string; explorerUrl: string; status: 'PENDING' | 'SUCCEEDED' | 'FAILED' }> {
     this.assertTestnet();
     if (!signedXdr?.trim()) throw new BadRequestException('signedXdr is required');
-    try {
-      const transaction = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
+    const transaction = parsePayment(signedXdr, expected);
       if (expectedPublicKey && (!('source' in transaction) || transaction.source !== expectedPublicKey)) throw new BadRequestException('Transaction source does not match payment sender');
-      const result = await this.server.submitTransaction(transaction);
-      return {
-        hash: result.hash,
-        explorerUrl: `https://stellar.expert/explorer/testnet/tx/${result.hash}`,
-      };
-    } catch (error) {
-      throw new ServiceUnavailableException(`Stellar testnet submission failed: ${error}`);
-    }
+    const hash = transaction.hash().toString('hex');
+    // A transport error may happen after acceptance. Always query the same hash;
+    // never build another transaction or infer failure from a timeout.
+    try { await this.server.submitTransaction(transaction); } catch { /* reconcile below */ }
+    return { hash, explorerUrl: `https://stellar.expert/explorer/testnet/tx/${hash}`, status: await this.verifyTransaction(hash) };
+  }
+
+  async verifyTransaction(hash: string): Promise<'PENDING' | 'SUCCEEDED' | 'FAILED'> {
+    this.assertTestnet();
+    if (!/^[a-f0-9]{64}$/.test(hash)) throw new BadRequestException('Invalid transaction hash');
+    try {
+      const result = await this.server.transactions().transaction(hash).call();
+      if (result.hash !== hash || !result.ledger) return 'PENDING';
+      return result.successful ? 'SUCCEEDED' : 'FAILED';
+    } catch { return 'PENDING'; }
   }
 
   private assertTestnet(): void {

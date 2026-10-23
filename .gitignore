@@ -9,6 +9,8 @@ Cargo.lock
 **/.next/
 **/dist/
 **/coverage/
+**/.npm-cache/
+**/*.tsbuildinfo
 
 # Environment files
 **/.env

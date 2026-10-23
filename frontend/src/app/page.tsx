@@ -1,3 +1,5 @@
+'use client';
+
 import { NativeWallet } from '@/components/Wallet/NativeWallet';
 import { Icon } from '@/components/ui/Icon';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -12,7 +14,7 @@ function Brand() {
 
 function NavItem({ item, mobile = false }: { item: typeof navigation[number]; mobile?: boolean }) {
   const [icon, label] = item;
-  return <button type="button" className={`afri-nav-item ${icon === 'wallet' ? 'active' : ''} ${mobile ? 'mobile' : ''}`}><Icon name={icon} size={mobile ? 18 : 18} /><span>{label}</span></button>;
+  return <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('afripay:navigate', { detail: icon }))} className={`afri-nav-item ${icon === 'wallet' ? 'active' : ''} ${mobile ? 'mobile' : ''}`}><Icon name={icon} size={18} /><span>{label}</span></button>;
 }
 
 export default function HomePage() {

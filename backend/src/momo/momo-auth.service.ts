@@ -56,6 +56,7 @@ export class MomoAuthService {
     let response: Response;
     try {
       response = await fetch(`${baseUrl}${path}`, {
+        signal: AbortSignal.timeout(15000),
         method: 'POST',
         headers: {
           Authorization: `Basic ${basicAuth}`,

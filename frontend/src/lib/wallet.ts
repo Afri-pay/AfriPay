@@ -39,6 +39,8 @@ export function validateSecret(secret: string) {
 
 export async function encryptWallet(secret: string, publicKey: string, password: string): Promise<EncryptedWallet> {
   if (!password || password.length < 8) throw new Error('Wallet password must be at least 8 characters');
+  const validated = validateSecret(secret);
+  if (!validated.valid || validated.publicKey !== publicKey) throw new Error('Wallet key mismatch');
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(password, salt);
@@ -47,9 +49,13 @@ export async function encryptWallet(secret: string, publicKey: string, password:
 }
 
 export async function decryptWallet(wallet: EncryptedWallet, password: string) {
+  if (wallet.version !== 1 || wallet.network !== 'testnet' || wallet.kdf !== 'PBKDF2-SHA-256' || wallet.kdfParameters?.iterations !== ITERATIONS || base64ToBytes(wallet.salt).length !== 16 || base64ToBytes(wallet.iv).length !== 12) throw new Error('Invalid wallet metadata');
   const key = await deriveKey(password, base64ToBytes(wallet.salt));
   const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: base64ToBytes(wallet.iv) as unknown as BufferSource }, key, base64ToBytes(wallet.ciphertext) as unknown as BufferSource);
-  return new TextDecoder().decode(plaintext);
+  const secret = new TextDecoder().decode(plaintext);
+  const validated = validateSecret(secret);
+  if (!validated.valid || validated.publicKey !== wallet.publicKey) throw new Error('Wallet key mismatch');
+  return secret;
 }
 
 export function readEncryptedWallet(): EncryptedWallet | null {
