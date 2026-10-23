@@ -9,6 +9,7 @@ pub enum Error {
     NotInitialized = 2,
     InvalidAmount = 3,
     InsufficientBalance = 4,
+    ArithmeticOverflow = 5,
 }
 
 #[contracttype]
@@ -54,7 +55,10 @@ impl VaultContract {
         user.require_auth();
 
         let mut account = Self::accrue(&env, &user)?;
-        account.balance += amount;
+        account.balance = account
+            .balance
+            .checked_add(amount)
+            .ok_or(Error::ArithmeticOverflow)?;
         account.last_updated = env.ledger().timestamp();
 
         env.storage()
@@ -115,9 +119,16 @@ impl VaultContract {
 
         let elapsed = now.saturating_sub(account.last_updated);
         if elapsed > 0 && account.balance > 0 {
-            let interest = (account.balance * yield_rate_bps as i128 * elapsed as i128)
+            let interest = account
+                .balance
+                .checked_mul(yield_rate_bps as i128)
+                .and_then(|value| value.checked_mul(elapsed as i128))
+                .ok_or(Error::ArithmeticOverflow)?
                 / (BPS_DENOMINATOR * SECONDS_PER_YEAR as i128);
-            account.balance += interest;
+            account.balance = account
+                .balance
+                .checked_add(interest)
+                .ok_or(Error::ArithmeticOverflow)?;
         }
         account.last_updated = now;
 
@@ -129,6 +140,23 @@ impl VaultContract {
 mod test {
     use super::*;
     use soroban_sdk::testutils::{Address as _, Ledger};
+
+    #[test]
+    fn test_authorization_and_overflow_leave_balance_intact() {
+        let env = Env::default();
+        let contract_id = env.register(VaultContract, ());
+        let client = VaultContractClient::new(&env, &contract_id);
+        let user = Address::generate(&env);
+        client.initialize(&0);
+        assert!(client.try_deposit(&user, &10).is_err());
+        env.mock_all_auths();
+        client.deposit(&user, &i128::MAX);
+        assert_eq!(
+            client.try_deposit(&user, &1),
+            Err(Ok(Error::ArithmeticOverflow))
+        );
+        assert_eq!(client.balance_of(&user), i128::MAX);
+    }
 
     #[test]
     fn test_deposit_and_withdraw() {

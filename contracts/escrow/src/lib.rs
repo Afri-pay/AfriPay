@@ -1,5 +1,7 @@
 #![no_std]
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, token, Address, Env};
+use soroban_sdk::{
+    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env,
+};
 
 #[contracttype]
 #[derive(Clone)]
@@ -53,9 +55,7 @@ pub struct EscrowContract;
 
 #[contractimpl]
 impl EscrowContract {
-    /// Creates a new escrow payment. Placeholder implementation — see
-    /// issue "Implement escrow contract create_payment function" for the
-    /// full storage + persistence logic.
+    /// Legacy metadata-only payment record; no assets are deposited.
     pub fn create_payment(
         env: Env,
         amount: i128,
@@ -126,6 +126,9 @@ impl EscrowContract {
         if escrow.status != EscrowStatus::Created {
             return Err(Error::InvalidState);
         }
+        if env.ledger().timestamp() >= escrow.expires_at {
+            return Err(Error::InvalidExpiry);
+        }
         escrow.sender.require_auth();
         token::Client::new(&env, &escrow.asset).transfer(
             &escrow.sender,
@@ -142,7 +145,11 @@ impl EscrowContract {
         if escrow.status != EscrowStatus::Funded {
             return Err(Error::InvalidState);
         }
-        escrow.recipient.require_auth();
+        if env.ledger().timestamp() >= escrow.expires_at {
+            return Err(Error::InvalidExpiry);
+        }
+        // The depositor authorizes settlement to the fixed beneficiary.
+        escrow.sender.require_auth();
         token::Client::new(&env, &escrow.asset).transfer(
             &env.current_contract_address(),
             &escrow.recipient,
@@ -159,8 +166,9 @@ impl EscrowContract {
             return Err(Error::InvalidState);
         }
         if env.ledger().timestamp() < escrow.expires_at {
-            escrow.sender.require_auth();
+            return Err(Error::InvalidExpiry);
         }
+        escrow.sender.require_auth();
         token::Client::new(&env, &escrow.asset).transfer(
             &env.current_contract_address(),
             &escrow.sender,
@@ -186,13 +194,71 @@ impl EscrowContract {
         env.storage()
             .persistent()
             .set(&DataKey::Escrow(escrow_id), escrow);
+        env.events()
+            .publish((symbol_short!("escrow"), escrow_id), escrow.status);
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use soroban_sdk::testutils::Address as _;
+    use soroban_sdk::testutils::{Address as _, Ledger};
+
+    #[test]
+    fn test_asset_conservation_release_and_replay() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(EscrowContract, ());
+        let client = EscrowContractClient::new(&env, &contract_id);
+        let sender = Address::generate(&env);
+        let recipient = Address::generate(&env);
+        let admin = Address::generate(&env);
+        let asset = env.register_stellar_asset_contract_v2(admin).address();
+        token::StellarAssetClient::new(&env, &asset).mint(&sender, &1000);
+        let token = token::Client::new(&env, &asset);
+        let id = client.create_escrow(&asset, &100, &sender, &recipient, &100);
+        assert!(client.try_release(&id).is_err());
+        client.fund(&id);
+        assert_eq!(token.balance(&sender), 900);
+        assert_eq!(token.balance(&contract_id), 100);
+        assert!(client.try_fund(&id).is_err());
+        assert!(client.try_refund(&id).is_err());
+        env.mock_auths(&[]);
+        assert!(client.try_release(&id).is_err());
+        assert_eq!(token.balance(&contract_id), 100);
+        env.mock_all_auths();
+        client.release(&id);
+        assert_eq!(token.balance(&recipient), 100);
+        assert_eq!(token.balance(&contract_id), 0);
+        assert!(client.try_release(&id).is_err());
+        assert!(client.try_refund(&id).is_err());
+    }
+
+    #[test]
+    fn test_expiry_refund_and_failed_deposit() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(EscrowContract, ());
+        let client = EscrowContractClient::new(&env, &contract_id);
+        let sender = Address::generate(&env);
+        let recipient = Address::generate(&env);
+        let asset = env
+            .register_stellar_asset_contract_v2(Address::generate(&env))
+            .address();
+        let id = client.create_escrow(&asset, &100, &sender, &recipient, &100);
+        assert!(client.try_fund(&id).is_err());
+        assert!(client.get_escrow(&id).status == EscrowStatus::Created);
+        token::StellarAssetClient::new(&env, &asset).mint(&sender, &100);
+        client.fund(&id);
+        env.ledger().with_mut(|ledger| ledger.timestamp = 100);
+        assert!(client.try_release(&id).is_err());
+        client.refund(&id);
+        assert_eq!(token::Client::new(&env, &asset).balance(&sender), 100);
+        assert!(client.try_refund(&id).is_err());
+        let expired = client.create_escrow(&asset, &1, &sender, &recipient, &101);
+        env.ledger().with_mut(|ledger| ledger.timestamp = 101);
+        assert!(client.try_fund(&expired).is_err());
+    }
 
     #[test]
     fn test_create_payment_success() {

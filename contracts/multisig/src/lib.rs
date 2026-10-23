@@ -14,6 +14,7 @@ pub enum Error {
     AlreadyExecuted = 7,
     ThresholdNotMet = 8,
     InvalidAmount = 9,
+    DuplicateSigner = 10,
 }
 
 #[contracttype]
@@ -57,6 +58,14 @@ impl MultisigContract {
         if threshold == 0 || threshold > signers.len() {
             return Err(Error::InvalidThreshold);
         }
+        let mut unique = Vec::new(&env);
+        for signer in signers.iter() {
+            if unique.contains(&signer) {
+                return Err(Error::DuplicateSigner);
+            }
+            signer.require_auth();
+            unique.push_back(signer);
+        }
 
         env.storage().instance().set(&DataKey::Signers, &signers);
         env.storage()
@@ -77,6 +86,9 @@ impl MultisigContract {
         to: Address,
         amount: i128,
     ) -> Result<u64, Error> {
+        if amount <= 0 {
+            return Err(Error::InvalidAmount);
+        }
         proposer.require_auth();
         Self::require_signer(&env, &proposer)?;
 
@@ -273,6 +285,60 @@ impl MultisigContract {
 mod test {
     use super::*;
     use soroban_sdk::testutils::Address as _;
+
+    #[test]
+    fn test_duplicate_signers_and_unapproved_initialization() {
+        let env = Env::default();
+        let contract_id = env.register(MultisigContract, ());
+        let client = MultisigContractClient::new(&env, &contract_id);
+        let signer = Address::generate(&env);
+        let mut signers = Vec::new(&env);
+        signers.push_back(signer.clone());
+        assert!(client.try_initialize(&signers, &1).is_err());
+        env.mock_all_auths();
+        signers.push_back(signer);
+        assert_eq!(
+            client.try_initialize(&signers, &2),
+            Err(Ok(Error::DuplicateSigner))
+        );
+    }
+
+    #[test]
+    fn test_asset_transfer_threshold_conservation_and_replay() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let (contract_id, a, b, outsider) = setup(&env);
+        let client = MultisigContractClient::new(&env, &contract_id);
+        let mut signers = Vec::new(&env);
+        signers.push_back(a.clone());
+        signers.push_back(b.clone());
+        client.initialize(&signers, &2);
+        let asset = env
+            .register_stellar_asset_contract_v2(Address::generate(&env))
+            .address();
+        token::StellarAssetClient::new(&env, &asset).mint(&contract_id, &100);
+        let recipient = Address::generate(&env);
+        assert!(client
+            .try_propose_asset_transfer(&outsider, &asset, &recipient, &10)
+            .is_err());
+        assert!(client
+            .try_propose_asset_transfer(&a, &asset, &recipient, &0)
+            .is_err());
+        let id = client.propose_asset_transfer(&a, &asset, &recipient, &30);
+        assert!(client.try_execute_asset_transfer(&id).is_err());
+        assert!(client.try_approve_asset_transfer(&a, &id).is_err());
+        assert!(client.try_approve_asset_transfer(&outsider, &id).is_err());
+        client.approve_asset_transfer(&b, &id);
+        client.execute_asset_transfer(&id);
+        let token = token::Client::new(&env, &asset);
+        assert_eq!(token.balance(&recipient), 30);
+        assert_eq!(token.balance(&contract_id), 70);
+        assert!(client.try_execute_asset_transfer(&id).is_err());
+        let too_large = client.propose_asset_transfer(&a, &asset, &recipient, &1000);
+        client.approve_asset_transfer(&b, &too_large);
+        assert!(client.try_execute_asset_transfer(&too_large).is_err());
+        assert_eq!(token.balance(&contract_id), 70);
+    }
 
     fn setup(env: &Env) -> (Address, Address, Address, Address) {
         let contract_id = env.register(MultisigContract, ());
