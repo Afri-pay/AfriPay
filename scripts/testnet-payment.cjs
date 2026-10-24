@@ -48,8 +48,9 @@ async function main() {
     } finally { await restarted.onModuleDestroy(); }
     const evidence = { verifiedAt: new Date().toISOString(), network: 'Stellar Testnet', sender: input.sender, recipient: input.recipient, amount: input.amount, asset: 'XLM', memo: input.memo, feeStroops: prepared.fee, paymentIntentId: intent.id, transactionHash: result.transactionHash, explorerUrl: `https://stellar.expert/explorer/testnet/tx/${result.transactionHash}`, status: result.status, historyVerified: true, repositoryRestartVerified: true, duplicateSubmissionVerified: true, limitation: 'Node execution of wallet and backend helpers against real Testnet and isolated PostgreSQL; browser UI and public deployments were not exercised.' };
     await mkdir(join(__dirname, '../docs/evidence'), { recursive: true });
-    await writeFile(join(__dirname, '../docs/evidence/testnet-payment.json'), JSON.stringify(evidence, null, 2) + '\n');
+    evidence.sdk = require('../backend/package.json').dependencies['@stellar/stellar-sdk'];
+    await writeFile(join(__dirname, `../docs/evidence/testnet-payment-${result.transactionHash}.json`), JSON.stringify(evidence, null, 2) + '\n');
     console.log(JSON.stringify(evidence, null, 2));
   } finally { await store.onModuleDestroy(); }
 }
-main().catch(() => { console.error('Testnet verification failed. No success evidence was generated. Inspect account history before retrying.'); process.exitCode = 1; });
+main().catch((error) => { console.error(`Testnet verification failed: ${String(error?.message ?? 'unknown error').replace(/\bS[A-Z2-7]{55}\b/g, '[redacted seed]')}. No success evidence was generated; inspect account history before retrying.`); process.exitCode = 1; });

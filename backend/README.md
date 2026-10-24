@@ -1,3 +1,5 @@
+> Current validation and environment requirements: see the root README and PROJECT_READINESS_REPORT.md. Use Node 24.9+; Nest 12, Stellar SDK 17, Next 15/React 19, Jest 30 and Tailwind 4 are the tested versions. Backend tests require the provided VM-module script. Secrets remain local.
+
 # Backend
 
 NestJS + TypeORM + PostgreSQL + Redis service.

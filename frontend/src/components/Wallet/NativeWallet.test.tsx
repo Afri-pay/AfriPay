@@ -23,7 +23,9 @@ describe('native payment interaction', () => {
   });
   it('requires review before signing and retains an uncertain payment for retry', async () => {
     render(<NativeWallet />);
-    fireEvent.click(await screen.findByRole('button', { name: /Send$/ }));
+    const send = await screen.findByRole('button', { name: /Send$/ });
+    await waitFor(() => expect((send as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(send);
     fireEvent.change(screen.getByLabelText('Recipient address'), { target: { value: 'GTESTRECIPIENT' } });
     fireEvent.change(screen.getByLabelText('XLM amount'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Memo'), { target: { value: 'invoice' } });

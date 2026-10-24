@@ -138,7 +138,7 @@ export class StellarService {
     if (!signedXdr?.trim()) throw new BadRequestException('signedXdr is required');
     const transaction = parsePayment(signedXdr, expected);
       if (expectedPublicKey && (!('source' in transaction) || transaction.source !== expectedPublicKey)) throw new BadRequestException('Transaction source does not match payment sender');
-    const hash = transaction.hash().toString('hex');
+    const hash = Buffer.from(transaction.hash()).toString('hex');
     // A transport error may happen after acceptance. Always query the same hash;
     // never build another transaction or infer failure from a timeout.
     try { await this.server.submitTransaction(transaction); } catch { /* reconcile below */ }

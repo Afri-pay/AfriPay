@@ -18,4 +18,16 @@ describe('PaymentIntentService', () => {
     const sender = Keypair.random().publicKey();
     await expect(service.create({ idempotencyKey: 'self', sender, recipient: sender, amount: '1', asset: 'XLM' })).rejects.toThrow(BadRequestException);
   });
+
+  it('validates link expiry and asset and rejects expired links on retrieval', async () => {
+    const service = new PaymentIntentService();
+    const input = { creator: Keypair.random().publicKey(), asset: 'XLM' };
+    await expect(service.createLink({ ...input, asset: 'USD' })).rejects.toThrow();
+    await expect(service.createLink({ ...input, expiresAt: 'invalid' })).rejects.toThrow();
+    const link = await service.createLink({ ...input, expiresAt: new Date(Date.now() + 1000).toISOString() });
+    expect((await service.getLink(link.id)).creator).toBe(input.creator);
+    jest.useFakeTimers();
+    try { jest.advanceTimersByTime(2000); await expect(service.getLink(link.id)).rejects.toThrow('expired'); }
+    finally { jest.useRealTimers(); }
+  });
 });

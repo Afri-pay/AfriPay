@@ -27,7 +27,7 @@ describe('Stellar payment verification', () => {
   it.each([true, false])('requires independently queried ledger inclusion, success=%s', async (successful) => {
     const service = new StellarService();
     const tx = build();
-    const hash = tx.hash().toString('hex');
+    const hash = Buffer.from(tx.hash()).toString('hex');
     const call = jest.fn().mockResolvedValue({ hash, ledger: 123, successful });
     const server = { submitTransaction: jest.fn().mockResolvedValue({ hash }), transactions: () => ({ transaction: () => ({ call }) }) };
     Object.assign(service, { server });

@@ -21,13 +21,15 @@ export function parsePayment(xdr: string, expected?: NativePayment): Transaction
   if (!(tx instanceof Transaction)) throw new BadRequestException('Fee-bump envelopes are not supported');
   const signer = Keypair.fromPublicKey(tx.source);
   if (!tx.signatures.some((signature) => {
-    try { return signer.verify(tx.hash(), signature.signature()); } catch { return false; }
+    try { return signer.verify(tx.hash(), signature.signature); } catch { return false; }
   })) throw new BadRequestException('A valid Testnet source-account signature is required');
   if (expected) {
     validatePayment(expected);
     const op = tx.operations[0];
     if (tx.source !== expected.sender || tx.operations.length !== 1 || op.type !== 'payment' || op.source || !op.asset.isNative() || op.destination !== expected.recipient || stroops(op.amount) !== stroops(expected.amount)) throw new BadRequestException('Transaction does not match payment intent');
-    if (expected.memo ? tx.memo.type !== 'text' || String(tx.memo.value) !== expected.memo : tx.memo.type !== 'none') throw new BadRequestException('Transaction memo does not match intent');
+    const memoValue = tx.memo.value;
+    const memoText = memoValue instanceof Uint8Array ? Buffer.from(memoValue).toString('utf8') : String(memoValue);
+    if (expected.memo ? tx.memo.type !== 'text' || memoText !== expected.memo : tx.memo.type !== 'none') throw new BadRequestException('Transaction memo does not match intent');
   }
   if (!tx.timeBounds || Number(tx.timeBounds.maxTime) === 0) throw new BadRequestException('Finite transaction time bounds required');
   if (BigInt(tx.fee) > BigInt(1000000)) throw new BadRequestException('Transaction fee exceeds Testnet wallet limit');

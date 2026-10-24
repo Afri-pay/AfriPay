@@ -14,7 +14,7 @@ describe('reviewed native payment signing', () => {
   it('signs only the reviewed payment locally', () => {
     const tx = TransactionBuilder.fromXDR(signTransactionXdr(sender.secret(), build(), review), Networks.TESTNET);
     expect(tx.signatures).toHaveLength(1);
-    expect(sender.verify(tx.hash(), tx.signatures[0].signature())).toBe(true);
+    expect(sender.verify(tx.hash(), tx.signatures[0].signature)).toBe(true);
   });
   it.each([
     { recipient: Keypair.random().publicKey() }, { amount: '3' }, { memo: 'different' },

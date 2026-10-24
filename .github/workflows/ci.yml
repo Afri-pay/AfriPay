@@ -1,68 +1,108 @@
 name: CI
-
 on:
   pull_request:
     types: [opened, synchronize, reopened]
   push:
     branches: [main]
-
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   contracts:
-    name: Contracts
     runs-on: ubuntu-latest
+    container: rust@sha256:48b7f435b8fc6378ce43b44f15e3a47fd8919b2825f835c39bd4bd3da50af5b8
     defaults:
       run:
         working-directory: contracts
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          components: clippy
-      - name: Run cargo test
-        run: cargo test
-      - name: Run cargo clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
+          persist-credentials: false
+      - run: rustup component add rustfmt clippy
+      - run: cargo fmt --check
+      - run: cargo test --locked
+      - run: cargo clippy --locked --all-targets --all-features -- -D warnings
+      - run: rustup target add wasm32v1-none
+      - run: cargo build --locked --target wasm32v1-none --release
   backend:
-    name: Backend
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: isolated_ci_only
+          POSTGRES_DB: afripay_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:isolated_ci_only@127.0.0.1:5432/afripay_test
     defaults:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          node-version: 20
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
           cache: npm
           cache-dependency-path: backend/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Run lint
-        run: npm run lint
-      - name: Run tests
-        run: npm test -- --runInBand
-      - name: Run build
-        run: npm run build
-
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm test -- --runInBand
+      - run: npx --no-install tsc --noEmit
+      - run: npm run build
   frontend:
-    name: Frontend
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_URL: https://afripay-api-seven.vercel.app
+      NEXT_TELEMETRY_DISABLED: '1'
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          node-version: 20
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Run lint
-        run: npm run lint
-      - name: Run tests
-        run: npm test -- --runInBand
-      - name: Run build
-        run: npm run build
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm test -- --runInBand
+      - run: npm run build
+      - run: npx --no-install tsc --noEmit
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - run: node scripts/scan-secrets.cjs --history
+      - run: npm ci --ignore-scripts --prefix backend
+      - run: npm ci --ignore-scripts --prefix frontend
+      - name: Dependency advisory gate (high and critical)
+        shell: bash
+        run: |
+          set +e
+          npm audit --prefix backend --audit-level=high --json > backend-audit.json
+          backend_status=$?
+          npm audit --prefix frontend --audit-level=high --json > frontend-audit.json
+          frontend_status=$?
+          test "$backend_status" -eq 0 && test "$frontend_status" -eq 0
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: dependency-advisories
+          path: '*-audit.json'

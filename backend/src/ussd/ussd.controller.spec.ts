@@ -30,4 +30,16 @@ describe('UssdController', () => {
   it('rejects invalid menu options', () => {
     expect(controller.handleUssd({ text: '9' })).toMatch(/^END Invalid option/);
   });
+
+  it('expires abandoned sessions and rejects malformed input without collecting a PIN', () => {
+    jest.useFakeTimers();
+    try {
+      controller.handleUssd({ sessionId: 'expiry', text: '1' });
+      jest.advanceTimersByTime(300001);
+      expect(controller.handleUssd({ sessionId: 'expiry', text: '1*0812345678' })).toContain('Session expired');
+      expect(controller.handleUssd({ text: 42 } as unknown as Parameters<UssdController['handleUssd']>[0])).toContain('Invalid input');
+      expect(controller.handleUssd({ text: '1*invalid' })).toContain('Invalid recipient');
+      expect(controller.handleUssd({ text: '1*0812345678*-1' })).toContain('Invalid amount');
+    } finally { jest.useRealTimers(); }
+  });
 });

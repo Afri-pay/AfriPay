@@ -36,7 +36,9 @@ export function signTransactionXdr(secret: string, xdr: string, review: PaymentR
   if (transaction.operations.length !== 1 || operation.type !== 'payment' || operation.source || !operation.asset.isNative() || operation.destination !== review.recipient || amountUnits(operation.amount) !== amountUnits(review.amount) || amountUnits(review.amount) <= BigInt(0)) throw new Error('Transaction does not match reviewed payment');
   if (transaction.fee !== review.fee || BigInt(transaction.fee) > BigInt(1000000)) throw new Error('Unexpected transaction fee');
   const memo = review.memo ?? '';
-  if (memo ? transaction.memo.type !== 'text' || String(transaction.memo.value) !== memo : transaction.memo.type !== 'none') throw new Error('Transaction memo does not match review');
+  const memoValue = transaction.memo.value;
+  const memoText = memoValue instanceof Uint8Array ? new TextDecoder().decode(memoValue) : String(memoValue);
+  if (memo ? transaction.memo.type !== 'text' || memoText !== memo : transaction.memo.type !== 'none') throw new Error('Transaction memo does not match review');
   if (!transaction.timeBounds || Number(transaction.timeBounds.maxTime) <= Date.now() / 1000 || Number(transaction.timeBounds.maxTime) > Date.now() / 1000 + 360) throw new Error('Transaction expired or invalid time bounds');
   if (transaction.signatures.length) throw new Error('Unexpected existing signatures');
   transaction.sign(source);

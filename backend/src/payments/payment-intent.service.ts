@@ -67,7 +67,7 @@ export class PaymentIntentService {
   async submit(id: string, signedXdr: string, stellar: StellarService): Promise<PaymentIntent> {
     const intent = await this.get(id);
     const tx = parsePayment(signedXdr, intent);
-    const hash = tx.hash().toString('hex');
+    const hash = Buffer.from(tx.hash()).toString('hex');
     // Persist the hash before any network side effect. Atomic across instances.
     const claimed = await this.store.claimHash(id, hash);
     if (claimed.status !== 'PENDING') return claimed;

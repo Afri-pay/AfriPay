@@ -1,3 +1,5 @@
+> Historical planning document. Current implementation/evidence and unresolved work are authoritative in PROJECT_READINESS_REPORT.md and docs/REMAINING_WORK.md. Do not treat this plan as completed capability.
+
 # AfriPay — External Acceptance & Payment Readiness Plan
 
 Repository: https://github.com/Afri-pay/AfriPay

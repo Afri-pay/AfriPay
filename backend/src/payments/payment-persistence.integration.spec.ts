@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import { Keypair } from '@stellar/stellar-sdk';
 import { PaymentIntentStore } from './payment-intent.store';
 import { PaymentIntentService } from './payment-intent.service';
+import { MomoTransactionStore } from '../momo/momo-transaction.store';
 
 // Explicit isolated database only; never inherit a deployment DATABASE_URL.
 const databaseTests = process.env.TEST_DATABASE_URL ? describe : describe.skip;
@@ -53,5 +54,21 @@ databaseTests('PostgreSQL payment persistence', () => {
     const broken = new PaymentIntentStore();
     await broken.onModuleDestroy();
     await expect(broken.findIntent(link.id)).rejects.toThrow('Payment storage unavailable');
+  });
+
+  it('persists MoMo references and protects terminal state across two instances', async () => {
+    const first = new MomoTransactionStore();
+    const second = new MomoTransactionStore();
+    await first.onModuleInit(); await second.onModuleInit();
+    try {
+      const referenceId = crypto.randomUUID();
+      const record = { referenceId, type: 'COLLECTION' as const, status: 'PENDING' as const, amount: '2', currency: 'EUR', externalId: crypto.randomUUID(), partyId: '2348012345678', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      await first.save(record);
+      expect((await second.find(referenceId))?.externalId).toBe(record.externalId);
+      await expect(second.save({ ...record, referenceId: crypto.randomUUID() })).rejects.toThrow();
+      await first.upsertStatus(referenceId, { status: 'SUCCESSFUL' });
+      await second.upsertStatus(referenceId, { status: 'FAILED' });
+      expect((await first.find(referenceId))?.status).toBe('SUCCESSFUL');
+    } finally { await first.onModuleDestroy(); await second.onModuleDestroy(); }
   });
 });
