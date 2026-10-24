@@ -15,7 +15,7 @@ Private keys do not go to the backend.
 
 ## Files
 
-The frontend adds `src/lib/wallet.ts`, `src/lib/stellar.ts`, `src/hooks/useNativeWallet.ts`, and `src/components/Wallet/NativeWallet.tsx`. The backend adds `src/stellar/stellar.controller.ts` and extends `StellarService` with account summaries, history, Testnet funding, and Soroban RPC transaction preparation/submission.
+The frontend adds `src/lib/wallet.ts`, `src/lib/stellar.ts`, `src/hooks/useNativeWallet.ts`, and the wallet UI in `src/components/wallet/` (provider, onboarding gate, send flow). The backend adds `src/stellar/stellar.controller.ts` and extends `StellarService` with account summaries, history, Testnet funding, and Soroban RPC transaction preparation/submission.
 
 ## Signing and network
 
