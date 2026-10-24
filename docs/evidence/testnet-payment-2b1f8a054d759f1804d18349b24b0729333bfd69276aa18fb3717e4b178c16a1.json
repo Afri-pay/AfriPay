@@ -1,0 +1,19 @@
+{
+  "verifiedAt": "2026-10-23T19:32:40.275Z",
+  "network": "Stellar Testnet",
+  "sender": "GCSCKA6ZXTLA76O3VPFU4TIVVANB4AKRVR3TDZJWUCVO5J4WKCAULFLR",
+  "recipient": "GCY44VK7XMFWWVMXNA6AQQBLXDS7YHFBPFMDJ2KYJHKESEILDFLEAATE",
+  "amount": "1.0000001",
+  "asset": "XLM",
+  "memo": "AfriPay verification",
+  "feeStroops": "261355",
+  "paymentIntentId": "94a84a6b-b224-4b4e-927f-2d225be7186f",
+  "transactionHash": "2b1f8a054d759f1804d18349b24b0729333bfd69276aa18fb3717e4b178c16a1",
+  "explorerUrl": "https://stellar.expert/explorer/testnet/tx/2b1f8a054d759f1804d18349b24b0729333bfd69276aa18fb3717e4b178c16a1",
+  "status": "SUCCEEDED",
+  "historyVerified": true,
+  "repositoryRestartVerified": true,
+  "duplicateSubmissionVerified": true,
+  "limitation": "Node execution of wallet and backend helpers against real Testnet and isolated PostgreSQL; browser UI and public deployments were not exercised.",
+  "sdk": "17.3.0"
+}

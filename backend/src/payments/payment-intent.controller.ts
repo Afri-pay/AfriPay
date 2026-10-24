@@ -1,6 +1,5 @@
-import { BadRequestException, Body, Controller, Get, Headers, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';
 import { PaymentIntentService } from './payment-intent.service';
-import { ApiKeyGuard } from '../auth/api-key.guard';
 import { StellarService } from '../stellar/stellar.service';
 
 interface CreatePaymentBody {
@@ -12,7 +11,8 @@ interface CreatePaymentBody {
 }
 
 @Controller('payments')
-@UseGuards(ApiKeyGuard)
+// Public Testnet metadata and signed-envelope relay. Never require a browser
+// to publish the service credential protecting MoMo/rates/admin operations.
 export class PaymentIntentController {
   constructor(private readonly payments: PaymentIntentService, private readonly stellar: StellarService) {}
 
@@ -29,20 +29,19 @@ export class PaymentIntentController {
 
   @Get('intents/:id')
   get(@Param('id') id: string) {
-    return this.payments.get(id);
+    return this.payments.reconcile(id, this.stellar);
   }
 
   @Post('intents/:id/transaction')
   async buildTransaction(@Param('id') id: string) {
-    const intent = this.payments.get(id);
+    const intent = await this.payments.get(id);
+    if (intent.transactionHash || intent.status !== 'PENDING') throw new BadRequestException('Intent already submitted; check its status');
     return this.stellar.buildNativePayment(intent.sender, intent.recipient, intent.amount, intent.memo);
   }
 
   @Post('intents/:id/submit')
   async submit(@Param('id') id: string, @Body() body: { signedXdr: string }) {
-    const intent = this.payments.get(id);
-    const result = await this.stellar.submitSignedTransaction(body?.signedXdr, intent.sender);
-    return this.payments.markSubmitted(id, result.hash);
+    return this.payments.submit(id, body?.signedXdr, this.stellar);
   }
 
   @Post('links')

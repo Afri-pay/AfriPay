@@ -1,3 +1,5 @@
+> Current validation and environment requirements: see the root README and PROJECT_READINESS_REPORT.md. Use Node 24.9+; Nest 12, Stellar SDK 17, Next 15/React 19, Jest 30 and Tailwind 4 are the tested versions. Backend tests require the provided VM-module script. Secrets remain local.
+
 # Contributing to AfriPay
 
 Thank you for your interest in contributing to AfriPay. Contributions are welcome from developers, designers, documentation authors, testers, and community members.

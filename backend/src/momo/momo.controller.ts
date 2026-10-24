@@ -59,6 +59,7 @@ export class MomoController {
         'amount, currency, externalId and payerMsisdn are required',
       );
     }
+    this.validatePayment(dto.amount, dto.currency, dto.externalId, dto.payerMsisdn);
   }
 
   private validateTransfer(dto: TransferDto): void {
@@ -67,5 +68,10 @@ export class MomoController {
         'amount, currency, externalId and payeeMsisdn are required',
       );
     }
+    this.validatePayment(dto.amount, dto.currency, dto.externalId, dto.payeeMsisdn);
+  }
+
+  private validatePayment(amount: string, currency: string, externalId: string, party: string): void {
+    if (typeof amount !== 'string' || !/^\d{1,12}(\.\d{1,2})?$/.test(amount) || Number(amount) <= 0 || currency !== 'EUR' || typeof externalId !== 'string' || !externalId.trim() || externalId.length > 128 || typeof party !== 'string' || !/^\d{7,15}$/.test(party)) throw new BadRequestException('Invalid sandbox payment: positive EUR amount, reference and MSISDN required');
   }
 }

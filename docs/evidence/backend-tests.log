@@ -1,0 +1,65 @@
+﻿node.exe : (node:12252) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:2 char:98
++ ... ipay_test'; & 'C:\Program Files\nodejs\node.exe' --experimental-vm-mo ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:12252) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+[Nest] 12252  - 23/10/2026, 21:01:46   ERROR [ExceptionsHandler] PayloadTooLargeError: request entity too large
+    at readStream (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\raw-body\index.js:163:17)
+    at getRawBody (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\raw-body\index.js:116:12)
+    at read (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\body-parser\lib\read.js:134:3)
+    at jsonParser (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\body-parser\lib\types\json.js:60:5)
+    at Layer.handleRequest (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:342:13)
+    at C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:582:12)
+    at next (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:291:5)
+    at read (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\body-parser\lib\read.js:68:5)
+    at urlencodedParser (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\body-parser\lib\types\urlencoded.js:51:5)
+    at Layer.handleRequest (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:342:13)
+    at C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:582:12)
+    at next (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:291:5)
+    at cors (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\cors\lib\index.js:188:7)
+    at C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\cors\lib\index.js:224:17
+    at originCallback (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\cors\lib\index.js:214:15)
+    at C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\cors\lib\index.js:219:13
+    at optionsCallback (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\cors\lib\index.js:199:9)
+    at corsMiddleware (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\cors\lib\index.js:204:7)
+    at Layer.handleRequest (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:342:13)
+    at C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:582:12)
+    at next (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:291:5)
+    at C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\@nestjs\platform-express\adapters\express-adapter.js:47:17
+    at Layer.handleRequest (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:342:13)
+    at C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:582:12)
+    at next (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:291:5)
+    at router.handle (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\router\index.js:186:3)
+    at app.handle (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\express\lib\application.js:177:15)
+    at Server.app (C:\Users\Bf&s3\Desktop\AfriPay\backend\node_modules\express\lib\express.js:38:9)
+    at Server.emit (node:events:514:28)
+    at parserOnIncoming (node:_http_server:1293:12)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:125:17) {
+  expected: 40011,
+  length: 40011,
+  limit: 32768,
+  type: 'entity.too.large'
+}
+[Nest] 12252  - 23/10/2026, 21:01:51     LOG [MomoService] MTN COLLECTION callback processed: referenceId=d01c35fb-4142-4860-a186-c689dd90aeb5 status=SUCCESSFUL
+[Nest] 12252  - 23/10/2026, 21:01:51     LOG [MomoService] MTN DISBURSEMENT callback processed: referenceId=729b7c2e-6aad-49ff-b180-7407319e89e2 status=FAILED
+[Nest] 12252  - 23/10/2026, 21:01:51    WARN [MomoService] Received MTN COLLECTION callback for unknown externalId=unknown-order
+[Nest] 12252  - 23/10/2026, 21:01:51   ERROR [MomoAuthService] Failed to reach MTN MoMo collection token endpoint: 
+Error: network down
+
+Test Suites: 17 passed, 17 total
+Tests:       68 passed, 68 total
+Snapshots:   0 total
+Time:        13.453 s, estimated 15 s
+Ran all test suites.
+Test results written to: ..\docs\evidence\backend-tests.json

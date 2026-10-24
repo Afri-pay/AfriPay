@@ -1,145 +1,54 @@
-# AfriPay Project Readiness Report
+# AfriPay verified readiness report
 
-## Executive summary
+Updated October 23, 2026 (Africa/Lagos). **Substantial remediation completed; the full definition of done is not met. AfriPay remains Testnet-only.**
 
-This audit found a promising but early-stage AfriPay monorepo: a Next.js wallet shell, a NestJS MoMo/rates/USSD backend, and four Soroban crates. The project includes a tracked payment-intent API/UI, Horizon transaction construction, native Testnet signing and submission, explicit escrow lifecycle methods, an asset-aware multisig execution path, MoMo idempotency protections, PostgreSQL-backed loading/persistence, scheduled reconciliation, API-key protection, and USSD session validation. The four Soroban contracts are deployed and queryable on Stellar Testnet.
+## Executive assessment
 
-No contract IDs, transaction hashes, live demo links, contributor counts, stars, forks, or PR activity were fabricated.
+The baseline had a functional native wallet but unsafe source-only signing review, premature successful intent status, unawaited database persistence, weak concurrency handling, inadequately tested contract transfers, misleading USSD/payment UI, and vulnerable dependencies. This branch implements reviewed local signing, independent chain finality checks, durable intent/hash binding, atomic metadata operations, API abuse controls, contract authorization/invariant fixes, a resolving payment-link page, and critical frontend dependency/CSP upgrades.
 
-## Original state found during audit
+A real authorized Testnet transfer settled through AfriPay's wallet/backend helpers. Browser/provider E2E, durable reconciliation/recovery, independent review and live rollout remain unfinished.
 
-- Frontend: Next.js 14 with a native wallet page and wallet regression tests.
-- Backend: NestJS modules for rates, MoMo, USSD, health, and empty payments/Stellar module shells.
-- MoMo: sandbox request/status/webhook behavior exists and is unit tested; state uses PostgreSQL when configured and an in-memory fallback for isolated tests.
-- USSD: menu and prompt flow exist, but session persistence and real payment initiation are absent.
-- Escrow: only a create-record path existed; no fund/release/refund/expiry lifecycle.
-- Multisig: signer/threshold/duplicate approval checks existed, but execution only flipped an `executed` flag and did not move assets.
-- CI: frontend, backend, and contract jobs exist. The invalid crates.io patch was removed; local Rust execution now reaches the linker but requires the Windows C runtime library.
-- Existing working-tree files were preserved, including the user-provided fix plan and `contracts/Cargo.lock`.
+## Executed checks
 
-## Completed in this pass
+| Check | Actual command / execution | Result | Evidence |
+|---|---|---|---|
+| Backend tests including HTTP/PostgreSQL | Jest --runInBand with isolated TEST_DATABASE_URL | PASS: 17 suites / 68 tests | docs/evidence/backend-tests.json and .log |
+| Frontend tests | Jest --runInBand | PASS: 5 suites / 22 tests | docs/evidence/frontend-tests.json and .log |
+| Backend TypeScript | npm run typecheck (tsc --noEmit) | PASS | Local command output |
+| Backend lint | npm run lint | PASS | Local command output |
+| Backend production build | Nest build -p tsconfig.build.json | PASS; dist/main.js exists | Local command output |
+| Frontend lint/TypeScript | npm run lint / npm run typecheck | PASS | Local command output |
+| Frontend production build | Next 15.5.28 production build, configured API URL | PASS | Dynamic / and /pay/[id], middleware compiled; final SDK 17 bundle compiled successfully |
+| Production CSP rendering | node scripts/check-local-csp.cjs against local production server | PASS | docs/evidence/csp-check.json: 14 nonce-bearing scripts, nonce differs per request |
+| Contract tests | cargo test --locked in pinned Rust container | PASS: 26 tests | 4 escrow / 10 gateway / 6 multisig / 6 vault; generated snapshots |
+| Contract formatting | cargo fmt --check | PASS | Pinned container execution |
+| Contract Clippy | cargo clippy --locked --all-targets --all-features -- -D warnings | PASS | Pinned container execution |
+| Soroban release builds | cargo build --locked --target wasm32v1-none --release | PASS: all four WASM artifacts | contracts/target/wasm32v1-none/release (ignored build artifacts) |
+| Workflow syntax | actionlint 1.7.7 container | PASS | Local command output |
+| Database integration | Real PostgreSQL 16 tests | PASS | Repeated migrations, two-instance idempotency, hash uniqueness, restart, write failure, links and MoMo terminal-state tests |
+| Live Testnet payment | Explicit opt-in scripts/testnet-payment.cjs | PASS, library/API integration | docs/evidence/testnet-payment.json |
+| Public deployment probes | node scripts/check-deployment.cjs | MIXED | Frontend 200; API initially 200, later timeout; Testnet RPC healthy; historical contract records found |
+| Secret pattern scan | node scripts/scan-secrets.cjs --history | PASS for configured patterns | No pattern findings; not proof of exhaustive secret absence |
+| Dependency audit | npm audit --audit-level=high | PASS | Zero vulnerabilities reported in both workspaces; raw JSON in docs/evidence |
+| Browser deployed payments / MTN sandbox | Not executed | BLOCKED / unverified | Browser automation/deployment verification and MTN credentials outstanding |
+| Hosted CI run | New branch workflow | Pending push/host execution | Do not infer GitHub Actions success from local validation |
 
-- Completed a repository-wide structure and baseline audit.
-- Confirmed backend baseline, then expanded it to 11 suites and 46 tests passing.
-- Confirmed frontend baseline: 1 suite, 1 test passing.
-- Added `docs/CONTRIBUTOR_BACKLOG.md` with legitimate, scoped future work and acceptance criteria.
-- Added this report with explicit limitations and evidence boundaries.
-- Added payment intents with idempotency-key deduplication and a frontend send/history surface.
-- Added escrow states and asset transfer entry points for fund, release, refund, and expiry-aware authorization.
-- Added asset-aware multisig proposals, threshold approvals, one-time execution, and token transfer.
-- Added MoMo duplicate-request protection and terminal-state transition protection.
-- Added `backend/migrations/001_payment_state.sql` for durable MoMo transactions and webhook events.
-- Added durable PostgreSQL tables and repository loading/upserts for payment intents and payment links.
-- Added a five-minute configurable MoMo reconciliation scheduler with test-environment suppression and graceful shutdown.
-- Added USSD session tracking, expiry, recipient validation, and amount validation.
-- Removed the invalid crates.io patch from `contracts/Cargo.toml`; the lockfile already pins the compatible dependency graph.
-- Upgraded the Soroban workspace to SDK 22.0.11 and pinned the lockfile to `ed25519-dalek 2.2.0` for a reproducible host/test dependency graph.
-- Installed/repaired Visual Studio C++ Build Tools and the WASM target; all contract checks and release WASM builds now run locally.
-- Added verified deployment instructions and evidence placeholders in `docs/STELLAR_TESTNET_DEPLOYMENT.md`.
+The npm scripts call Node entry points directly so Windows paths containing ampersands do not break npm-generated .cmd shims. Some initial commands failed: npm was absent from PATH, sandbox downloads were denied, old Rust lacked the lockfile's MSRV, Rust images lacked rustfmt/Clippy, and an SDK timeout option was incorrect. These were corrected and relevant checks rerun; no failed test was disabled. PostgreSQL-dependent tests skip in ordinary credential-free runs but were actually executed here.
 
-## Partially completed or not implemented
+## Blockchain evidence
 
-The full requested P0/P1 scope is not complete. PostgreSQL runtime use requires a configured database and migration execution; live MoMo reconciliation requires provider credentials; Testnet deployment requires a Stellar CLI and funded deployer account.
+Confirmed native XLM transaction: [83f99505a45062c47d1ea4ca2d81dc2ea0f85f90b562dac20d979d73201251e2](https://stellar.expert/explorer/testnet/tx/83f99505a45062c47d1ea4ca2d81dc2ea0f85f90b562dac20d979d73201251e2). Amount 1.0000001 XLM; public records in TESTNET_PAYMENT_EVIDENCE. It verified independent ledger success, history, same-envelope retry, and persisted state after store restart. It was not a browser/public-deployment or MoMo-to-Soroban test.
 
-P0 remains incomplete: live end-to-end settlement evidence and production provider reconciliation. Database-backed payment-intent persistence is implemented when `DATABASE_URL` is configured; it still needs a live PostgreSQL integration run.
+All four historical contract instances and eight recorded upload/deploy transactions were found in read-only probes. Existing deployments are not updated by this branch. Gateway remains a trusted attestation model; vault remains simulated accounting.
 
-P1 remains incomplete: QR image generation, OpenAPI publication, provider-backed USSD payments, and verified testnet evidence. Payment links, transaction history/details, session tracking, and production API-key protection are implemented.
+## Contributor and funding assessment
 
-P2/P3 are partly present before this pass: README, SECURITY.md, CONTRIBUTING.md, code of conduct, issue templates, PR template, and CI already exist. The new contributor backlog supplements them without creating GitHub activity.
+Twelve open issues, fifteen closed issues, and sixteen PR descriptions/discussions were reviewed. Full reconciliation is in docs/REMAINING_WORK.md. No issue was closed or activity manufactured. Several historical closures are valid for skeleton scope only.
 
-## Tests and validation
+The user reports a September 18 appeal dismissal and two remaining appeals. Current work postdates that dismissal; baseline main had no later commits. The original rejection date is unknown. docs/DRIPS_WAVE_READINESS.md supplies factual improvements and official-process links. Acceptance is discretionary; no probability or guarantee is offered.
 
-Executed:
+## Git and next action
 
-- `cd backend && npm test -- --runInBand` — PASS, 11 suites / 46 tests.
-- `cd frontend && npm test -- --runInBand` — PASS, 1 suite / 1 test.
-- `cd contracts && cargo test --locked` — PASS, 20 contract tests plus doc-test runs.
-- `cd contracts && cargo fmt --check` — PASS.
-- `cd contracts && cargo clippy --all-targets --all-features -- -D warnings` — PASS.
-- `cd contracts && cargo build --release --target wasm32-unknown-unknown` — PASS; gateway, escrow, multisig, and vault WASM artifacts produced.
-- `cd backend && npm run build` — PASS.
-- `cd frontend && npm run build` — PASS.
-- `cd backend && npm run lint` — PASS.
-- `cd frontend && npm run lint` — PASS.
+Branch: fix/afripay-security-and-drips-readiness, based on 7b36620. Incremental commits include 9f1c359 (payments/wallet/persistence), ec3c4ed (contracts), and 869bb98 (framework/CSP), followed by validation/documentation commits. See git log for exact final hashes and the PR for the full diff.
 
-`npm audit fix --package-lock-only` applied nonbreaking lockfile remediation. `npm audit --audit-level=high` now reports 24 backend findings and 8 frontend findings. Remaining fixes require coordinated Nest 12/Next 14.2.35 or newer migration work, so automatic force-fixes were not applied.
-
-## Final evidence table
-
-| Validation | Status | Evidence |
-|---|---|---|
-| Soroban tests | PASS | 20 contract tests passed locally |
-| Payment Gateway Testnet deployment | PASS | `CB656MBZCHK5BMYUVNJQYAFIAWFNJZ2PASDYU7WCSVX34SUC6E5M3VCG`; [deployment tx](https://stellar.expert/explorer/testnet/tx/d2243dfb6359453990c3b8b87e72113a6cd4e89a04b5fa11b30703d6ac0b9304) |
-| Escrow Testnet deployment | PASS | `CCAL4FLLFKKCAT5NBFSDB7RH6GJYNBAPBJNIIJO5PZOEPHB23HXGCTCY`; [deployment tx](https://stellar.expert/explorer/testnet/tx/457b0db4ceb5738e728bfab49ee685be1adb78971c8b53989e9e222c7313477e) |
-| Multisig Testnet deployment | PASS | `CC2KFAKQMON3TZ6L2LEUXOTGZHMDBYVTV5XJR2O24NKPJTEYHJJXIA67`; [deployment tx](https://stellar.expert/explorer/testnet/tx/9680343138462b2fa9f807b6405e5f20e799cb2cbb0f7be472deb0e6285866f9) |
-| Savings Vault Testnet deployment | PASS | `CAT5D3LJHARIS7GNGCWABZGOQG64JZZLDG4IMRJ22CPNU37A3G5DX5II`; [deployment tx](https://stellar.expert/explorer/testnet/tx/73b0e25704889f288edacfb62b549d1ad9c9072aed8fd3786c45f397b41415cf) |
-| Native-wallet Testnet payment | PENDING EVIDENCE | Requires a funded browser Testnet session and explicit user approval |
-| PostgreSQL live persistence | PASS | Docker PostgreSQL 16; migration, API write, direct query, backend restart, and reload verification passed |
-| MTN MoMo sandbox | BLOCKED | Official sandbox credentials unavailable |
-| Backend tests | PASS | 11 suites / 46 tests |
-| Frontend tests | PASS | 1 suite / 1 test |
-| Production builds | PASS | Backend and frontend builds passed; release WASM built |
-| Contributor backlog cleanup | PASS | Completed drafts removed and remaining drafts rewritten |
-
-## Files created
-
-- `PROJECT_READINESS_REPORT.md`
-- `docs/CONTRIBUTOR_BACKLOG.md`
-- `backend/migrations/001_payment_state.sql`
-- `backend/src/payments/payment-intent.controller.ts`
-- `backend/src/payments/payment-intent.service.ts`
-- `backend/src/payments/payment-intent.store.ts`
-- `backend/src/payments/payment-intent.service.spec.ts`
-- `backend/src/momo/momo-reconciliation.service.ts`
-- `frontend/src/components/Payments/PaymentDashboard.tsx`
-
-## Migrations and CI
-
-Added `backend/migrations/001_payment_state.sql` as an explicit PostgreSQL schema for MoMo transactions, webhook deduplication, payment intents, and payment links. `MomoTransactionStore` and `PaymentIntentStore` apply this migration and reload records when `DATABASE_URL` is configured; local tests use the in-memory fallback. `MomoReconciliationService` runs pending-record reconciliation on a configurable interval. The existing CI workflow was audited but not altered.
-
-## Testnet evidence
-
-The four contracts were deployed with Stellar CLI 28.0.0 from the official `stellar/stellar-cli` container using a dedicated Friendbot-funded Testnet deployer. Contract IDs, upload/deploy hashes, and explorer links are recorded in `docs/STELLAR_TESTNET_DEPLOYMENT.md`.
-
-## Security findings and fixes
-
-- Positive: no private keys, seed phrases, provider credentials, or production secrets were added.
-- Positive: application routes use the API-key guard in production and MoMo webhooks use a dedicated shared-token guard.
-- Open: rate limiting and database-backed auditability still need implementation; API-key authentication is now applied to the protected application routes.
-- Open: provider credentials and callback verification must be exercised with real sandbox configuration before claiming production-like reliability.
-- Open: `npm audit` reports unresolved transitive vulnerabilities; upgrading Nest/Next/tooling should be handled as a dedicated compatibility change.
-
-## External credential blockers
-
-Real MTN MoMo sandbox calls require provider credentials. Testnet payment evidence requires a browser session with a funded native wallet and explicit user approval. The CLI/deployer blocker is cleared; official MoMo sandbox credentials remain external.
-
-## Items intentionally left for external contributors
-
-The detailed backlog in `docs/CONTRIBUTOR_BACKLOG.md` covers Soroban settlement verification, live PostgreSQL CI validation, MoMo-backed USSD, rate limiting, webhook replay claims, and contract invariant coverage. Completed escrow-release, basic persistence, and basic API-authentication drafts were removed from `.github/issues/`.
-
-## Final readiness checklist
-
-- [ ] End-to-end Stellar Testnet payment works
-- [x] All four Soroban contracts deployed and queried on Stellar Testnet
-- [x] Escrow create/fund/release/refund/expiry entry points implemented
-- [x] Multisig real asset movement entry point implemented
-- [x] PostgreSQL persistence and migrations are wired when `DATABASE_URL` is configured
-- [x] MoMo state reloads and scheduled reconciliation are wired when configured
-- [x] Frontend supports receive, transaction details, and explorer links
-- [x] Frontend supports payment intent creation and history
-- [x] Existing backend tests pass
-- [x] Existing frontend tests pass
-- [x] Rust checks pass in the repaired dependency environment
-- [x] No fabricated evidence or secrets added
-- [x] Contributor backlog is documented
-- [x] Stellar WASM artifacts build locally
-- [x] Rust clippy passes with warnings denied
-- [x] README and architecture/status evidence updated for the implemented paths
-
-## Recommended next actions
-
-1. Configure a funded Testnet deployer and Stellar CLI, deploy each WASM artifact, and record explorer-verified IDs/hashes.
-2. Configure PostgreSQL and MTN MoMo sandbox credentials, then exercise migration/reconciliation paths end to end.
-3. Run the frontend with the native wallet on Testnet and record one verified payment hash.
-4. Plan a coordinated Nest 12/Next security upgrade, with compatibility tests before merging.
-5. Add CI coverage for database-backed integration tests and the Rust toolchain environment.
+Review the security findings and PR, complete operational recovery, complete browser/provider validation, then authorize staged deployment and contract migration separately. Request another Drips review only when the evidence accurately reflects the reviewed/deployed state and the dashboard permits an appeal.

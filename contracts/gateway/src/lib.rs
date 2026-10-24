@@ -84,6 +84,7 @@ impl GatewayContract {
         if env.storage().instance().has(&DataKey::Confirmer) {
             return Err(GatewayError::AlreadyInitialized);
         }
+        confirmer.require_auth();
         env.storage()
             .instance()
             .set(&DataKey::Confirmer, &confirmer);
@@ -219,6 +220,17 @@ mod test {
     use super::*;
     use soroban_sdk::testutils::{Address as _, Ledger};
     use soroban_sdk::Env;
+
+    #[test]
+    fn test_named_confirmer_cannot_initialize_without_signature() {
+        let env = Env::default();
+        let (_id, client) = setup(&env);
+        assert!(client.try_init(&Address::generate(&env)).is_err());
+        assert_eq!(
+            client.try_get_confirmer(),
+            Err(Ok(GatewayError::NotInitialized))
+        );
+    }
 
     fn setup(env: &Env) -> (Address, GatewayContractClient<'_>) {
         let contract_id = env.register(GatewayContract, ());

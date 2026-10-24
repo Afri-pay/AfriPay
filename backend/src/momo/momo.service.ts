@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { MomoAuthService } from './momo-auth.service';
 import { MomoTransactionStore } from './momo-transaction.store';
 import { getMomoConfig } from './momo.config';
@@ -26,12 +26,16 @@ export class MomoService {
   // ---------------------------------------------------------------------
 
   async requestToPay(dto: RequestToPayDto): Promise<MomoTransactionRecord> {
-    const existing = this.store.findByExternalId(dto.externalId, 'COLLECTION');
+    const existing = await this.store.findByExternalId(dto.externalId, 'COLLECTION');
     if (existing) {
+      if (Number(existing.amount) !== Number(dto.amount) || existing.currency !== dto.currency || existing.partyId !== dto.payerMsisdn) throw new ConflictException('Reference reused with different payment details');
       return existing;
     }
     const referenceId = randomUUID();
     const config = getMomoConfig();
+    // Reserve durably before contacting the provider. An uncertain result is
+    // reconciled using this reference; never create a fresh charge on retry.
+    const reserved = await this.store.save({ referenceId, type: 'COLLECTION', status: 'PENDING', amount: dto.amount, currency: dto.currency, externalId: dto.externalId, partyId: dto.payerMsisdn, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     const token = await this.auth.getToken('collection');
 
     const body = {
@@ -51,17 +55,7 @@ export class MomoService {
       body,
     );
 
-    return this.store.save({
-      referenceId,
-      type: 'COLLECTION',
-      status: 'PENDING',
-      amount: dto.amount,
-      currency: dto.currency,
-      externalId: dto.externalId,
-      partyId: dto.payerMsisdn,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    return reserved;
   }
 
   async getCollectionStatus(referenceId: string): Promise<MomoTransactionRecord> {
@@ -73,12 +67,14 @@ export class MomoService {
   // ---------------------------------------------------------------------
 
   async transfer(dto: TransferDto): Promise<MomoTransactionRecord> {
-    const existing = this.store.findByExternalId(dto.externalId, 'DISBURSEMENT');
+    const existing = await this.store.findByExternalId(dto.externalId, 'DISBURSEMENT');
     if (existing) {
+      if (Number(existing.amount) !== Number(dto.amount) || existing.currency !== dto.currency || existing.partyId !== dto.payeeMsisdn) throw new ConflictException('Reference reused with different payment details');
       return existing;
     }
     const referenceId = randomUUID();
     const config = getMomoConfig();
+    const reserved = await this.store.save({ referenceId, type: 'DISBURSEMENT', status: 'PENDING', amount: dto.amount, currency: dto.currency, externalId: dto.externalId, partyId: dto.payeeMsisdn, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     const token = await this.auth.getToken('disbursement');
 
     const body = {
@@ -98,17 +94,7 @@ export class MomoService {
       body,
     );
 
-    return this.store.save({
-      referenceId,
-      type: 'DISBURSEMENT',
-      status: 'PENDING',
-      amount: dto.amount,
-      currency: dto.currency,
-      externalId: dto.externalId,
-      partyId: dto.payeeMsisdn,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    return reserved;
   }
 
   async getDisbursementStatus(referenceId: string): Promise<MomoTransactionRecord> {
@@ -131,12 +117,12 @@ export class MomoService {
     return this.applyCallback('DISBURSEMENT', payload);
   }
 
-  getTransaction(referenceId: string): MomoTransactionRecord | undefined {
+  getTransaction(referenceId: string): Promise<MomoTransactionRecord | undefined> {
     return this.store.find(referenceId);
   }
 
   async reconcilePending(): Promise<MomoTransactionRecord[]> {
-    const pending = this.store.listPending();
+    const pending = await this.store.listPending();
     const results: MomoTransactionRecord[] = [];
     for (const record of pending) {
       try {
@@ -152,11 +138,11 @@ export class MomoService {
   // Internals
   // ---------------------------------------------------------------------
 
-  private applyCallback(
+  private async applyCallback(
     type: 'COLLECTION' | 'DISBURSEMENT',
     payload: MomoWebhookPayload,
-  ): MomoTransactionRecord {
-    const referenceId = this.store.findReferenceIdByExternalId(payload.externalId, type);
+  ): Promise<MomoTransactionRecord> {
+    const referenceId = await this.store.findReferenceIdByExternalId(payload.externalId, type);
 
     if (!referenceId) {
       this.logger.warn(
@@ -170,7 +156,9 @@ export class MomoService {
     const reason =
       typeof payload.reason === 'string' ? payload.reason : payload.reason?.message;
 
-    const updated = this.store.upsertStatus(referenceId, {
+    const existing = await this.store.find(referenceId);
+    this.validateResource(payload, existing!);
+    const updated = await this.store.upsertStatus(referenceId, {
       status: payload.status,
       reason,
     });
@@ -190,10 +178,12 @@ export class MomoService {
     product: 'collection' | 'disbursement',
     referenceId: string,
   ): Promise<MomoTransactionRecord> {
-    const existing = this.store.find(referenceId);
+    const existing = await this.store.find(referenceId);
     if (!existing) {
       throw new NotFoundException(`Unknown transaction reference ${referenceId}`);
     }
+
+    if (existing.type !== (product === 'collection' ? 'COLLECTION' : 'DISBURSEMENT')) throw new BadRequestException('Transaction product mismatch');
 
     const config = getMomoConfig();
     const token = await this.auth.getToken(product);
@@ -205,6 +195,7 @@ export class MomoService {
     let response: Response;
     try {
       response = await fetch(`${config.baseUrl}${path}`, {
+        signal: AbortSignal.timeout(15000),
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -225,11 +216,12 @@ export class MomoService {
     }
 
     const resource = (await response.json()) as MomoStatusResource;
+    this.validateResource(resource, existing);
     const reason =
       typeof resource.reason === 'string' ? resource.reason : resource.reason?.message;
 
     return (
-      this.store.upsertStatus(referenceId, { status: resource.status, reason }) ??
+      await this.store.upsertStatus(referenceId, { status: resource.status, reason }) ??
       existing
     );
   }
@@ -246,6 +238,7 @@ export class MomoService {
     let response: Response;
     try {
       response = await fetch(url, {
+        signal: AbortSignal.timeout(15000),
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -264,16 +257,14 @@ export class MomoService {
 
     // MTN MoMo returns 202 Accepted with no body when the request is queued.
     if (response.status !== 202) {
-      let detail = '';
-      try {
-        detail = await response.text();
-      } catch {
-        // ignore - best effort only
-      }
       throw new MomoApiException(
-        `MTN MoMo ${product} request rejected${detail ? `: ${detail}` : ''}`,
+        `MTN MoMo ${product} request rejected; check the existing reference before retrying`,
         response.status,
       );
     }
+  }
+
+  private validateResource(resource: MomoStatusResource, existing: MomoTransactionRecord): void {
+    if (!resource || !['PENDING', 'SUCCESSFUL', 'FAILED'].includes(resource.status) || resource.externalId !== existing.externalId || resource.currency !== existing.currency || Number(resource.amount) !== Number(existing.amount)) throw new BadRequestException('Provider payment details do not match stored transaction');
   }
 }

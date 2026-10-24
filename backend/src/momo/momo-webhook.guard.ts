@@ -16,7 +16,7 @@ export function verifyWebhookToken(providedToken: string | undefined): boolean {
   const { webhookToken } = getMomoConfig();
 
   if (!webhookToken) {
-    return true;
+    return process.env.NODE_ENV !== 'production';
   }
 
   if (!providedToken) {

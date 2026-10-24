@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Header } from '@nestjs/common';
+import { Controller, Post, Body, Header, UseGuards } from '@nestjs/common';
+import { ApiKeyGuard } from '../auth/api-key.guard';
 
 /** Africa's Talking USSD callback body (application/x-www-form-urlencoded). */
 export interface UssdRequestBody {
@@ -16,16 +17,21 @@ interface UssdSession {
 }
 
 @Controller('ussd')
+@UseGuards(ApiKeyGuard)
 export class UssdController {
   private readonly sessions = new Map<string, UssdSession>();
 
   @Post()
   @Header('Content-Type', 'text/plain')
   handleUssd(@Body() body: UssdRequestBody): string {
+    if (!body || (body.text !== undefined && (typeof body.text !== 'string' || body.text.length > 256))) return 'END Invalid input. Please start again.';
     const sessionId = body.sessionId?.trim() || 'anonymous';
     const previous = this.sessions.get(sessionId);
+    for (const [key, session] of this.sessions) if (Date.now() - session.updatedAt > 5 * 60 * 1000) this.sessions.delete(key);
+    if (this.sessions.size >= 10000 && !previous) return 'END Service busy. Please try later.';
     if (previous && Date.now() - previous.updatedAt > 5 * 60 * 1000) {
       this.sessions.delete(sessionId);
+      return 'END Session expired. Please dial again.';
     }
     const { text } = body;
     const input = text ? text.split('*') : [];
@@ -53,7 +59,7 @@ export class UssdController {
       case '2':
         return 'END Balance: NGN 0.00 (demo — connect a wallet or MoMo account to view live balance)';
       case '3':
-        return 'END No recent transactions. Send money via option 1 to get started.';
+        return 'END Transaction history is unavailable until a verified account is connected.';
       case '4':
         return `END AfriPay Help
 Dial *123# to send money, check balance, or view history.
@@ -77,10 +83,10 @@ Support: support@afripay.io`;
       if (!/^\d+(\.\d{1,2})?$/.test(input[2]) || Number(input[2]) <= 0) {
         return 'END Invalid amount. Please start again.';
       }
-      return 'CON Enter PIN:';
+      return 'END USSD payments are not connected. No transfer was initiated. Never enter a mobile-money PIN here.';
     }
     if (input.length === 4) {
-      return 'END Processing transfer... You will receive an SMS confirmation shortly.';
+      return 'END USSD payments are not connected. No transfer was initiated.';
     }
     return 'END Invalid input. Please start again.';
   }

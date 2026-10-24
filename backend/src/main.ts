@@ -1,16 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as bodyParser from 'body-parser';
-import { getAllowedOrigins } from './config/cors';
+import { configureHttp } from './config/http';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  app.enableCors({ origin: getAllowedOrigins() });
-
-  // USSD providers (e.g. Africa's Talking) POST application/x-www-form-urlencoded bodies.
-  app.use(bodyParser.urlencoded({ extended: false }));
-  app.use(bodyParser.json());
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  configureHttp(app);
 
   const configuredPort = Number.parseInt(process.env.PORT ?? '3101', 10);
   const port = Number.isInteger(configuredPort) && configuredPort > 0 && configuredPort < 65536 ? configuredPort : 3101;

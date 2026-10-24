@@ -38,4 +38,4 @@ Advanced.
 
 ## Likely files/modules
 
-`backend/src/stellar/`, `backend/src/payments/`, `frontend/src/components/Wallet/`, `docs/STELLAR_TESTNET_DEPLOYMENT.md`.
+`backend/src/stellar/`, `backend/src/payments/`, `frontend/src/components/wallet/`, `docs/STELLAR_TESTNET_DEPLOYMENT.md`.

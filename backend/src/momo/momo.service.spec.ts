@@ -139,7 +139,7 @@ describe('MomoService', () => {
 
       expect(updated.referenceId).toBe(record.referenceId);
       expect(updated.status).toBe('SUCCESSFUL');
-      expect(service.getTransaction(record.referenceId)?.status).toBe('SUCCESSFUL');
+      expect((await service.getTransaction(record.referenceId))?.status).toBe('SUCCESSFUL');
     });
 
     it('applies a disbursement callback with a FAILED reason', async () => {

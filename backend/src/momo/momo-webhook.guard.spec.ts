@@ -10,6 +10,13 @@ describe('momo-webhook.guard', () => {
     expect(verifyWebhookToken('anything')).toBe(true);
   });
 
+  it('fails closed in production when no token is configured', () => {
+    const previous = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try { expect(verifyWebhookToken(undefined)).toBe(false); }
+    finally { process.env.NODE_ENV = previous; }
+  });
+
   it('rejects a missing token when one is configured', () => {
     process.env.MTN_MOMO_WEBHOOK_TOKEN = 'secret';
     expect(verifyWebhookToken(undefined)).toBe(false);

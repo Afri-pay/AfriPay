@@ -19,6 +19,7 @@ export interface MomoConfig {
  * so unit tests can freely set process.env before invoking service methods.
  */
 export function getMomoConfig(): MomoConfig {
+  if ((process.env.MTN_MOMO_TARGET_ENVIRONMENT && process.env.MTN_MOMO_TARGET_ENVIRONMENT !== 'sandbox') || (process.env.MTN_MOMO_BASE_URL && process.env.MTN_MOMO_BASE_URL !== 'https://sandbox.momodeveloper.mtn.com')) throw new Error('Only the official MTN MoMo sandbox is enabled');
   return {
     baseUrl: process.env.MTN_MOMO_BASE_URL || 'https://sandbox.momodeveloper.mtn.com',
     targetEnvironment: process.env.MTN_MOMO_TARGET_ENVIRONMENT || 'sandbox',
