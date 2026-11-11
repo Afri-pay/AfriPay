@@ -8,8 +8,10 @@ import { UssdModule } from './ussd/ussd.module';
 import { PaymentsModule } from './payments/payments.module';
 import { StellarModule } from './stellar/stellar.module';
 
+import { WebhooksModule } from './webhooks/webhooks.module';
+
 @Module({
-  imports: [RatesModule, MomoModule, UssdModule, PaymentsModule, StellarModule],
+  imports: [RatesModule, MomoModule, UssdModule, PaymentsModule, StellarModule, WebhooksModule],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: RateLimitGuard }],
 })

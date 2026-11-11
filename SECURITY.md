@@ -18,6 +18,22 @@ Production requires PostgreSQL. Apply reviewed migrations explicitly; preserve e
 
 MoMo remains sandbox-only. Shared callback tokens fail closed in production; tokens in callback URLs can appear in host access logs, so restrict/redact those logs. No provider HMAC verification or centralized durable event claiming is claimed. Provider status polling and operational reconciliation remain necessary. Vercel process timers are not durable schedulers.
 
+### Webhook Security & Verification Matrix
+
+The centralized webhook router at `POST /webhooks/:provider/:endpoint` standardizes incoming callback handling:
+
+| Provider | Endpoint | Authentication Mechanism | Correlation ID | Replay Protection | Failure Mode |
+|---|---|---|---|---|---|
+| **MTN MoMo** | `/webhooks/momo/collection` | Query param token (`timingSafeEqual`) | `externalId` / `referenceId` | Idempotent upsert by `referenceId` (replay safe) | 401 Unauthorized on token mismatch |
+| **MTN MoMo** | `/webhooks/momo/disbursement` | Query param token (`timingSafeEqual`) | `externalId` / `referenceId` | Idempotent upsert by `referenceId` (replay safe) | 401 Unauthorized on token mismatch |
+| **Future Providers** | `/webhooks/:provider/:endpoint` | Provider-specific signature / token | Normalized payload identifier | Provider contract dependent | 404 Not Found on unregistered provider |
+
+#### Extension Point for New Providers:
+1. Register new provider slug in `WebhooksService.dispatch()`.
+2. Add provider-specific cryptographic signature verification guard / assertion.
+3. Delegate to domain service handler returning normalized `WebhookResult`.
+4. Register reconciliation poll in `WebhookReconciliationService.reconcilePending()`.
+
 The API enforces per-instance rate limits and 32KB bodies. Distributed edge limits, role-based/user authorization, authenticated USSD account binding and stronger provider operations remain open. CORS is not an access-control substitute.
 
 ## Browser and contract limitations
